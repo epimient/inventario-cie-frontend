@@ -22,10 +22,11 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
                     ref={ref}
                     id={selectId}
                     className={cn(
-                        'flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm',
+                        'flex h-9 w-full rounded-lg border border-input bg-card text-foreground px-3 py-1 text-sm',
                         'transition-colors duration-200',
                         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                         'disabled:cursor-not-allowed disabled:opacity-50',
+                        '[&>option]:bg-card [&>option]:text-foreground',
                         error && 'border-destructive focus-visible:ring-destructive',
                         className,
                     )}
