@@ -8,8 +8,9 @@ export async function getAll(skip = 0, limit = 1000, estado?: string): Promise<P
     return data;
 }
 
-export async function getPorVencer(dias: number = 7): Promise<Prestamo[]> {
-    const { data } = await api.get(`/prestamos/por-vencer?dias=${dias}`);
+export async function getPorVencer(dias?: number): Promise<Prestamo[]> {
+    const url = dias !== undefined ? `/prestamos/por-vencer?dias=${dias}` : '/prestamos/por-vencer';
+    const { data } = await api.get(url);
     return data;
 }
 

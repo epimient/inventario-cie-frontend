@@ -6,8 +6,9 @@ export async function getAll(skip = 0, limit = 1000): Promise<Material[]> {
     return data;
 }
 
-export async function getStockMinimo(minimo: number = 5): Promise<Material[]> {
-    const { data } = await api.get(`/materiales/stock-minimo?minimo=${minimo}`);
+export async function getStockMinimo(minimo?: number): Promise<Material[]> {
+    const url = minimo !== undefined ? `/materiales/stock-minimo?minimo=${minimo}` : '/materiales/stock-minimo';
+    const { data } = await api.get(url);
     return data;
 }
 

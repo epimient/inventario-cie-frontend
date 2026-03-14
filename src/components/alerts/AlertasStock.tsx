@@ -14,7 +14,7 @@ export function AlertasStock() {
     useEffect(() => {
         async function loadStock() {
             try {
-                const data = await materialesService.getStockMinimo(5);
+                const data = await materialesService.getStockMinimo();
                 setStockBajo(data);
             } catch (err) {
                 console.error('Error cargando alertas de stock:', err);

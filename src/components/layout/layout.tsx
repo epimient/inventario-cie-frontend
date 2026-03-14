@@ -14,6 +14,7 @@ const pageTitles: Record<string, string> = {
     '/prestamos': 'Préstamos',
     '/movimientos': 'Movimientos',
     '/exportar': 'Exportar Datos',
+    '/configuracion': 'Configuración de Sistema',
 };
 
 export function Layout() {

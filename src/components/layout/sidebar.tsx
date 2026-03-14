@@ -1,9 +1,10 @@
 import { NavLink } from 'react-router-dom';
 import {
-    LayoutDashboard, Monitor, Cpu, Bot, Package, Users, ClipboardList, History, Download, ChevronLeft, ChevronRight,
+    LayoutDashboard, Monitor, Cpu, Bot, Package, Users, ClipboardList, History, Download, Settings, ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { useState } from 'react';
+import { useAuth } from '@/contexts/auth-context';
 
 const navItems = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -15,6 +16,7 @@ const navItems = [
     { to: '/prestamos', icon: ClipboardList, label: 'Préstamos' },
     { to: '/movimientos', icon: History, label: 'Movimientos' },
     { to: '/exportar', icon: Download, label: 'Exportar' },
+    { to: '/configuracion', icon: Settings, label: 'Configuración', roles: ['admin'] },
 ];
 
 interface SidebarProps {
@@ -23,6 +25,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
+    const { hasRole } = useAuth();
+
     return (
         <aside
             className={cn(
@@ -42,7 +46,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
             {/* Navigation */}
             <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-                {navItems.map(({ to, icon: Icon, label }) => (
+                {navItems.filter(item => !item.roles || hasRole(item.roles)).map(({ to, icon: Icon, label }) => (
                     <NavLink
                         key={to}
                         to={to}

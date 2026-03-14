@@ -15,7 +15,7 @@ export function AlertasPrestamos() {
         async function loadAlertas() {
             try {
                 const [porVencerData, activosData] = await Promise.all([
-                    prestamosService.getPorVencer(7),
+                    prestamosService.getPorVencer(),
                     prestamosService.getActivos(),
                 ]);
                 setPorVencer(porVencerData);

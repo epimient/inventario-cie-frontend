@@ -17,6 +17,7 @@ import Prestatarios from '@/pages/prestatarios';
 import Prestamos from '@/pages/prestamos';
 import Movimientos from '@/pages/movimientos';
 import Exportar from '@/pages/exportar';
+import Configuracion from '@/pages/configuracion';
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -50,6 +51,7 @@ function App() {
                                     <Route path="/prestamos" element={<Prestamos />} />
                                     <Route path="/movimientos" element={<Movimientos />} />
                                     <Route path="/exportar" element={<Exportar />} />
+                                    <Route path="/configuracion" element={<Configuracion />} />
                                     {/* Fallback */}
                                     <Route path="*" element={<Navigate to="/dashboard" replace />} />
                                 </Route>
