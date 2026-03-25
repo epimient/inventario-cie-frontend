@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Search, AlertTriangle } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, AlertTriangle, Filter, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table } from '@/components/ui/table';
@@ -11,7 +11,6 @@ import { formatDate } from '@/utils/formatters';
 import { getErrorMessage } from '@/utils/error-handler';
 import type { Robot, RobotCreate } from '@/types';
 import { Spinner } from '@/components/ui/spinner';
-
 
 export default function RobotsPage() {
     const { robots: items, isLoading, isError, error, createRobot, updateRobot, deleteRobot, isCreating, isUpdating } = useRobots();
@@ -25,24 +24,20 @@ export default function RobotsPage() {
     const canEdit = hasRole(['admin', 'inventory']);
     const canDelete = hasRole(['admin']);
 
-    // Manejo de errores de API
     if (isError) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
                 <AlertTriangle className="h-12 w-12 text-destructive" />
                 <div className="text-center space-y-2">
                     <h3 className="font-semibold">Error al cargar robots</h3>
-                    <p className="text-sm text-muted-foreground">
-                        {error?.message || 'No se pudo conectar con el servidor'}
-                    </p>
+                    <p className="text-sm text-muted-foreground">{error?.message || 'No se pudo conectar con el servidor'}</p>
                 </div>
-                <Button variant="outline" onClick={() => window.location.reload()}>
+                <Button variant="outline" onClick={() => window.location.reload()} className="rounded-full">
                     Intentar de nuevo
                 </Button>
             </div>
         );
     }
-
 
     const openCreate = () => { setEditing(null); setForm({ nombre: '', fuera_de_servicio: 0, en_uso: 0, disponible: 0 }); setModalOpen(true); };
     const openEdit = (item: Robot) => { setEditing(item); setForm({ nombre: item.nombre, fuera_de_servicio: item.fuera_de_servicio, en_uso: item.en_uso, disponible: item.disponible }); setModalOpen(true); };
@@ -55,66 +50,100 @@ export default function RobotsPage() {
         } catch (err: any) { toast(getErrorMessage(err), 'error'); }
     };
 
-
     const handleDelete = async () => {
         if (!deleteModal) return;
         try { await deleteRobot(deleteModal.id); toast('Eliminado', 'success'); setDeleteModal(null); }
         catch (err: any) { toast(getErrorMessage(err), 'error'); }
     };
 
-
     const filtered = items.filter(e => (e.nombre || '').toLowerCase().includes(search.toLowerCase()));
 
     const columns = [
-        { key: 'nombre', header: 'Nombre' },
-        { key: 'disponible', header: 'Disponibles' },
-        { key: 'en_uso', header: 'En Uso' },
-        { key: 'fuera_de_servicio', header: 'Fuera Servicio' },
-        { key: 'total', header: 'Total' },
-        { key: 'created_at', header: 'Creado', render: (e: Robot) => formatDate(e.created_at) },
+        {
+            key: 'nombre',
+            header: 'Nombre',
+            render: (e: Robot) => <span className="font-bold text-[#1a1f1c]">{e.nombre}</span>
+        },
+        { key: 'disponible', header: 'Disponibles', render: (e: Robot) => <span className="font-semibold text-[#1a1f1c]">{e.disponible}</span> },
+        { key: 'en_uso', header: 'En Uso', render: (e: Robot) => <span className="font-semibold text-muted-foreground">{e.en_uso}</span> },
+        { key: 'fuera_de_servicio', header: 'Fuera Servicio', render: (e: Robot) => <span className="font-semibold text-destructive">{e.fuera_de_servicio}</span> },
+        { key: 'total', header: 'Total', render: (e: Robot) => <span className="font-semibold text-muted-foreground">{e.disponible + e.en_uso + e.fuera_de_servicio}</span> },
+        { key: 'created_at', header: 'Creado', className: 'text-muted-foreground', render: (e: Robot) => formatDate(e.created_at) },
         ...(canEdit ? [{
-            key: 'actions', header: '', className: 'w-24', render: (e: Robot) => (
-                <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" onClick={(ev) => { ev.stopPropagation(); openEdit(e); }}><Pencil className="h-3.5 w-3.5" /></Button>
-                    {canDelete && <Button variant="ghost" size="icon" onClick={(ev) => { ev.stopPropagation(); setDeleteModal(e); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
+            key: 'actions', header: '', className: 'w-24 text-right', render: (e: Robot) => (
+                <div className="flex justify-end gap-2 pr-4">
+                    <button className="text-muted-foreground hover:text-[#415A52] transition-colors p-2" onClick={(ev) => { ev.stopPropagation(); openEdit(e); }}>
+                        <Pencil className="h-4 w-4" />
+                    </button>
+                    {canDelete && (
+                        <button className="text-muted-foreground hover:text-destructive transition-colors p-2" onClick={(ev) => { ev.stopPropagation(); setDeleteModal(e); }}>
+                            <Trash2 className="h-4 w-4" />
+                        </button>
+                    )}
                 </div>
             )
         }] : []),
     ];
 
     return (
-        <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-                <div className="relative max-w-sm flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <input placeholder="Buscar robots..." value={search} onChange={(e) => setSearch(e.target.value)} className="flex h-9 w-full rounded-lg border border-input bg-transparent pl-9 pr-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+        <div className="space-y-6 animate-fade-in pb-8">
+            {/* Toolbar */}
+            <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
+                <div className="relative w-full max-w-sm">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <input
+                        placeholder="Buscar robots..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="flex h-12 w-full rounded-2xl border border-transparent bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] pl-12 pr-4 text-sm placeholder:text-muted-foreground transition-all hover:border-gray-100 focus:outline-none focus:ring-2 focus:ring-[#E8F3EE] focus:border-[#415A52]"
+                    />
                 </div>
-                {canEdit && <Button onClick={openCreate}><Plus className="h-4 w-4" /> Nuevo robot</Button>}
-            </div>
-            <Table columns={columns} data={filtered} loading={isLoading} emptyMessage="No hay robots" />
 
+                <div className="flex items-center gap-3">
+                    <button className="h-12 px-5 rounded-2xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] text-[#1a1f1c] font-semibold text-sm flex items-center gap-2 hover:bg-gray-50 transition-colors">
+                        <Filter className="h-4 w-4" /> Filter
+                    </button>
+                    <button className="h-12 px-5 rounded-2xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] text-[#1a1f1c] font-semibold text-sm flex items-center gap-2 hover:bg-gray-50 transition-colors">
+                        <Download className="h-4 w-4" /> Export
+                    </button>
+                    {canEdit && (
+                        <Button onClick={openCreate} className="h-12 px-6 rounded-2xl gap-2 font-bold shadow-md">
+                            <Plus className="h-4 w-4" /> Add Robot
+                        </Button>
+                    )}
+                </div>
+            </div>
+
+            {/* Main Table Card */}
+            <div className="bg-white rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100/50 overflow-hidden">
+                <Table columns={columns} data={filtered} loading={isLoading} emptyMessage="No hay robots" />
+            </div>
+
+            {/* Modals */}
             <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editar robot' : 'Nuevo robot'}>
-                <div className="space-y-3">
+                <div className="space-y-4 pt-2">
                     <Input label="Nombre" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} required />
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-3 gap-4">
                         <Input label="Disponibles" type="number" value={form.disponible} onChange={(e) => setForm({ ...form, disponible: +e.target.value })} />
                         <Input label="En Uso" type="number" value={form.en_uso} onChange={(e) => setForm({ ...form, en_uso: +e.target.value })} />
                         <Input label="Fuera Serv." type="number" value={form.fuera_de_servicio} onChange={(e) => setForm({ ...form, fuera_de_servicio: +e.target.value })} />
                     </div>
-                    <div className="flex justify-end gap-2 pt-2">
-                        <Button variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button>
-                        <Button onClick={handleSave} disabled={isCreating || isUpdating}>
+                    <div className="flex justify-end gap-3 pt-4">
+                        <Button variant="ghost" onClick={() => setModalOpen(false)}>Cancelar</Button>
+                        <Button onClick={handleSave} disabled={isCreating || isUpdating} className="px-8">
                             {editing ? (isUpdating ? <Spinner size="sm" /> : 'Guardar') : (isCreating ? <Spinner size="sm" /> : 'Crear')}
                         </Button>
                     </div>
-
                 </div>
             </Modal>
+
             <Modal open={!!deleteModal} onClose={() => setDeleteModal(null)} title="Confirmar eliminación">
-                <p className="text-sm text-muted-foreground mb-4">¿Eliminar <strong>{deleteModal?.nombre}</strong>?</p>
-                <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => setDeleteModal(null)}>Cancelar</Button>
-                    <Button variant="destructive" onClick={handleDelete}>Eliminar</Button>
+                <div className="pt-2">
+                    <p className="text-sm text-muted-foreground mb-6 leading-relaxed">¿Eliminar <strong className="text-foreground">{deleteModal?.nombre}</strong>? Esta acción no se puede deshacer.</p>
+                    <div className="flex justify-end gap-3">
+                        <Button variant="ghost" onClick={() => setDeleteModal(null)}>Cancelar</Button>
+                        <Button variant="destructive" onClick={handleDelete} className="px-8">Eliminar</Button>
+                    </div>
                 </div>
             </Modal>
         </div>

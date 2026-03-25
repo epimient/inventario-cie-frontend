@@ -11,10 +11,10 @@ export function Card({ children, className, glass }: CardProps) {
     return (
         <div
             className={cn(
-                'rounded-xl border transition-all duration-200',
+                'rounded-3xl border border-gray-100/50 transition-all duration-300',
                 glass
                     ? 'glass-card'
-                    : 'bg-card text-card-foreground shadow-sm',
+                    : 'bg-white text-card-foreground shadow-[0_8px_30px_rgb(0,0,0,0.04)]',
                 className,
             )}
         >

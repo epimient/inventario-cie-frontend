@@ -32,15 +32,15 @@ export function Table<T extends { id: number | string }>({
     }
 
     return (
-        <div className="overflow-x-auto rounded-xl border bg-card">
-            <table className="w-full text-sm">
+        <div className="overflow-x-auto w-full">
+            <table className="w-full text-sm text-left border-collapse">
                 <thead>
-                    <tr className="border-b bg-muted/50">
+                    <tr className="border-b border-gray-100">
                         {columns.map((col) => (
                             <th
                                 key={col.key}
                                 className={cn(
-                                    'px-4 py-3 text-left font-medium text-muted-foreground',
+                                    'px-6 py-4 font-semibold text-muted-foreground/80 tracking-wide text-xs uppercase',
                                     col.className,
                                 )}
                             >
@@ -49,11 +49,13 @@ export function Table<T extends { id: number | string }>({
                         ))}
                     </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-gray-50">
                     {data.length === 0 ? (
                         <tr>
-                            <td colSpan={columns.length} className="px-4 py-12 text-center text-muted-foreground">
-                                {emptyMessage}
+                            <td colSpan={columns.length} className="px-6 py-12 text-center text-muted-foreground bg-gray-50/50 rounded-xl">
+                                <div className="flex flex-col items-center justify-center gap-2">
+                                    <span className="text-sm">{emptyMessage}</span>
+                                </div>
                             </td>
                         </tr>
                     ) : (
@@ -61,13 +63,13 @@ export function Table<T extends { id: number | string }>({
                             <tr
                                 key={item.id}
                                 className={cn(
-                                    'border-b last:border-0 transition-colors hover:bg-muted/50',
+                                    'group bg-white hover:bg-gray-50 transition-colors duration-200',
                                     onRowClick && 'cursor-pointer',
                                 )}
                                 onClick={() => onRowClick?.(item)}
                             >
                                 {columns.map((col) => (
-                                    <td key={col.key} className={cn('px-4 py-3', col.className)}>
+                                    <td key={col.key} className={cn('px-6 py-4 whitespace-nowrap', col.className)}>
                                         {col.render
                                             ? col.render(item)
                                             : String((item as Record<string, unknown>)[col.key] ?? '-')}

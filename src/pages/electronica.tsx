@@ -1,121 +1,259 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Search, AlertTriangle } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { Plus, Pencil, Trash2, Search, AlertTriangle, Download, Filter, ArrowLeft, Cpu, Zap, Cable, Forward } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table } from '@/components/ui/table';
 import { Modal } from '@/components/ui/modal';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/toast';
 import { useAuth } from '@/contexts/auth-context';
 import { useElectronica } from '@/hooks/use-electronica';
-import { formatDate } from '@/utils/formatters';
-import { getErrorMessage } from '@/utils/error-handler';
-import type { Electronica, ElectronicaCreate } from '@/types';
 import { Spinner } from '@/components/ui/spinner';
+import type { Electronica, ElectronicaCreate } from '@/types';
+import { getErrorMessage } from '@/utils/error-handler';
 
+const tabs = ['Todos', 'Disponibles', 'En Uso', 'Agotados'];
+
+const getIcon = (nombre: string) => {
+    const n = nombre.toLowerCase();
+    if (n.includes('arduino') || n.includes('esp') || n.includes('microcontrolador')) return <Cpu className="h-5 w-5" />;
+    if (n.includes('sensor')) return <Zap className="h-5 w-5" />;
+    if (n.includes('cable') || n.includes('conector')) return <Cable className="h-5 w-5" />;
+    if (n.includes('fuente') || n.includes('alimentacion')) return <Forward className="h-5 w-5" />;
+    return <Cpu className="h-5 w-5" />;
+};
 
 export default function ElectronicaPage() {
-    const { electronica: items, isLoading, isError, error, createElectronica, updateElectronica, deleteElectronica, isCreating, isUpdating } = useElectronica();
+    const { electronica, isLoading, isError, error, createElectronica, updateElectronica, deleteElectronica, isCreating, isUpdating } = useElectronica();
+    const [searchParams] = useSearchParams();
     const [search, setSearch] = useState('');
-    const [modalOpen, setModalOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState('Todos');
+    const [modalOpen, setModalOpen] = useState(searchParams.get('new') === 'true');
     const [deleteModal, setDeleteModal] = useState<Electronica | null>(null);
     const [editing, setEditing] = useState<Electronica | null>(null);
-    const [form, setForm] = useState<ElectronicaCreate>({ nombre: '', descripcion: '', tipo: '', en_uso: 0, en_stock: 0 });
+    const [form, setForm] = useState<ElectronicaCreate>({
+        nombre: '', descripcion: '', tipo: '', en_uso: 0, en_stock: 0,
+    });
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 20;
     const { toast } = useToast();
     const { hasRole } = useAuth();
     const canEdit = hasRole(['admin', 'inventory']);
     const canDelete = hasRole(['admin']);
 
-    // Manejo de errores de API
     if (isError) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
                 <AlertTriangle className="h-12 w-12 text-destructive" />
                 <div className="text-center space-y-2">
                     <h3 className="font-semibold">Error al cargar electrónica</h3>
-                    <p className="text-sm text-muted-foreground">
-                        {error?.message || 'No se pudo conectar con el servidor'}
-                    </p>
+                    <p className="text-sm text-muted-foreground">{error?.message || 'No se pudo conectar con el servidor'}</p>
                 </div>
-                <Button variant="outline" onClick={() => window.location.reload()}>
+                <Button variant="outline" onClick={() => window.location.reload()} className="rounded-full">
                     Intentar de nuevo
                 </Button>
             </div>
         );
     }
 
+    const openCreate = () => {
+        setEditing(null);
+        setForm({ nombre: '', descripcion: '', tipo: '', en_uso: 0, en_stock: 0 });
+        setModalOpen(true);
+    };
 
-    const openCreate = () => { setEditing(null); setForm({ nombre: '', descripcion: '', tipo: '', en_uso: 0, en_stock: 0 }); setModalOpen(true); };
-    const openEdit = (item: Electronica) => { setEditing(item); setForm({ nombre: item.nombre, descripcion: item.descripcion || '', tipo: item.tipo || '', en_uso: item.en_uso, en_stock: item.en_stock }); setModalOpen(true); };
+    const openEdit = (item: Electronica) => {
+        setEditing(item);
+        setForm({ nombre: item.nombre, descripcion: item.descripcion || '', tipo: item.tipo || '', en_uso: item.en_uso, en_stock: item.en_stock });
+        setModalOpen(true);
+    };
 
     const handleSave = async () => {
         try {
-            if (editing) { await updateElectronica({ id: editing.id, data: form }); toast('Actualizado', 'success'); }
-            else { await createElectronica(form); toast('Creado', 'success'); }
+            if (editing) {
+                await updateElectronica({ id: editing.id, data: form });
+                toast('Electrónica actualizada', 'success');
+            } else {
+                await createElectronica(form);
+                toast('Electrónica creada', 'success');
+            }
             setModalOpen(false);
-        } catch (err: any) { toast(getErrorMessage(err), 'error'); }
+        } catch (err: any) {
+            toast(getErrorMessage(err), 'error');
+        }
     };
-
 
     const handleDelete = async () => {
         if (!deleteModal) return;
-        try { await deleteElectronica(deleteModal.id); toast('Eliminado', 'success'); setDeleteModal(null); }
-        catch (err: any) { toast(getErrorMessage(err), 'error'); }
+        try {
+            await deleteElectronica(deleteModal.id);
+            toast('Electrónica eliminada', 'success');
+            setDeleteModal(null);
+        } catch (err: any) {
+            toast(getErrorMessage(err), 'error');
+        }
     };
 
+    const filtered = electronica.filter((e) => {
+        const matchesSearch = (e.nombre || '').toLowerCase().includes(search.toLowerCase()) ||
+            (e.tipo || '').toLowerCase().includes(search.toLowerCase());
+        
+        let matchesTab = true;
+        if (activeTab === 'Disponibles') matchesTab = e.en_stock > 0 && e.en_uso === 0;
+        else if (activeTab === 'En Uso') matchesTab = e.en_uso > 0;
+        else if (activeTab === 'Agotados') matchesTab = e.en_stock === 0;
+        
+        return matchesSearch && matchesTab;
+    });
 
-    const filtered = items.filter(e => (e.nombre || '').toLowerCase().includes(search.toLowerCase()));
+    const totalItems = filtered.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedData = filtered.slice(startIndex, endIndex);
 
-    const columns = [
-        { key: 'nombre', header: 'Nombre' },
-        { key: 'tipo', header: 'Tipo', render: (e: Electronica) => e.tipo || '-' },
-        { key: 'en_stock', header: 'En Stock' },
-        { key: 'en_uso', header: 'En Uso' },
-        { key: 'total', header: 'Total' },
-        { key: 'created_at', header: 'Creado', render: (e: Electronica) => formatDate(e.created_at) },
-        ...(canEdit ? [{
-            key: 'actions', header: '', className: 'w-24', render: (e: Electronica) => (
-                <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" onClick={(ev) => { ev.stopPropagation(); openEdit(e); }}><Pencil className="h-3.5 w-3.5" /></Button>
-                    {canDelete && <Button variant="ghost" size="icon" onClick={(ev) => { ev.stopPropagation(); setDeleteModal(e); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
+    const columns: any = [
+        {
+            key: 'nombre',
+            header: 'Nombre',
+            render: (e: Electronica) => (
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-[#cae6fe] flex items-center justify-center text-[#486277]">
+                        {getIcon(e.nombre)}
+                    </div>
+                    <div>
+                        <p className="font-bold text-[#2d3335] leading-tight">{e.nombre}</p>
+                        <p className="text-xs text-[#5a6062]">{e.tipo || 'Sin tipo'}</p>
+                    </div>
                 </div>
             )
+        },
+        { key: 'descripcion', header: 'Descripción', render: (e: Electronica) => <span className="text-muted-foreground">{e.descripcion || '-'}</span> },
+        { key: 'en_stock', header: 'Stock', render: (e: Electronica) => <span className="font-medium text-green-600">{e.en_stock}</span> },
+        { key: 'en_uso', header: 'En Uso', render: (e: Electronica) => <span className="font-medium text-[#486277]">{e.en_uso}</span> },
+        { key: 'total', header: 'Total', render: (e: Electronica) => <span className="font-bold">{e.total}</span> },
+        ...(canEdit || canDelete ? [{
+            key: 'actions',
+            header: '',
+            className: 'w-24 text-right',
+            render: (e: Electronica) => (
+                <div className="flex justify-end gap-2 pr-4">
+                    {canEdit && (
+                        <button className="text-muted-foreground hover:text-[#4f645b] transition-colors p-2" onClick={(ev) => { ev.stopPropagation(); openEdit(e); }}>
+                            <Pencil className="h-4 w-4" />
+                        </button>
+                    )}
+                    {canDelete && (
+                        <button className="text-muted-foreground hover:text-destructive transition-colors p-2" onClick={(ev) => { ev.stopPropagation(); setDeleteModal(e); }}>
+                            <Trash2 className="h-4 w-4" />
+                        </button>
+                    )}
+                </div>
+            ),
         }] : []),
     ];
 
-    return (
-        <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-                <div className="relative max-w-sm flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <input placeholder="Buscar..." value={search} onChange={(e) => setSearch(e.target.value)} className="flex h-9 w-full rounded-lg border border-input bg-transparent pl-9 pr-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
-                </div>
-                {canEdit && <Button onClick={openCreate}><Plus className="h-4 w-4" /> Nuevo</Button>}
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <Spinner size="lg" />
             </div>
-            <Table columns={columns} data={filtered} loading={isLoading} emptyMessage="No hay elementos" />
+        );
+    }
 
-            <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editar' : 'Nuevo elemento'}>
-                <div className="space-y-3">
+    return (
+        <div className="space-y-6 animate-fade-in pb-8">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div className="space-y-2">
+                    <h2 className="text-4xl font-extrabold text-[#2d3335] tracking-tighter leading-none">Electrónica</h2>
+                    <p className="text-[#5a6062] max-w-md">Gestiona todos los componentes electrónicos del inventario.</p>
+                </div>
+                <div className="flex items-center gap-3">
+                    <Button variant="outline" className="h-12 px-5 rounded-full gap-2 font-semibold">
+                        <Filter className="h-4 w-4" /> Filtros
+                    </Button>
+                    {canEdit && (
+                        <Button onClick={openCreate} className="h-12 px-6 rounded-full gap-2 font-bold shadow-md">
+                            <Plus className="h-4 w-4" /> Nuevo Item
+                        </Button>
+                    )}
+                </div>
+            </div>
+
+            <div className="flex items-center gap-2 overflow-x-auto pb-2">
+                {tabs.map(tab => (
+                    <button
+                        key={tab}
+                        onClick={() => setActiveTab(tab)}
+                        className={`px-5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${activeTab === tab
+                            ? 'bg-[#486277] text-white'
+                            : 'bg-[#f1f4f5] text-[#5a6062] hover:bg-[#dee3e6]'
+                        }`}
+                    >
+                        {tab}
+                    </button>
+                ))}
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
+                <div className="relative w-full max-w-sm">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <input
+                        placeholder="Buscar electrónica..."
+                        value={search}
+                        onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+                        className="flex h-12 w-full rounded-2xl border border-transparent bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] pl-12 pr-4 text-sm placeholder:text-muted-foreground transition-all hover:border-gray-100 focus:outline-none focus:ring-2 focus:ring-[#cae6fe] focus:border-[#486277]"
+                    />
+                </div>
+            </div>
+
+            <div className="bg-white rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100/50 overflow-hidden">
+                <Table columns={columns} data={paginatedData} loading={isLoading} emptyMessage="No se encontraron items" />
+
+                {!isLoading && filtered.length > 0 && (
+                    <div className="px-8 py-5 border-t border-gray-50 flex items-center justify-between text-sm text-muted-foreground font-medium">
+                        <span>Mostrando {startIndex + 1} a {Math.min(endIndex, totalItems)} de {totalItems} registros</span>
+                        <div className="flex items-center gap-2">
+                            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-4 py-2 rounded-xl hover:bg-gray-50 disabled:opacity-30">
+                                <ArrowLeft className="h-4 w-4" />
+                            </button>
+                            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => (
+                                <button key={i} onClick={() => setCurrentPage(i + 1)} className={`px-4 py-2 rounded-xl font-bold ${currentPage === i + 1 ? 'bg-[#cae6fe] text-[#486277]' : 'hover:bg-gray-50'}`}>
+                                    {i + 1}
+                                </button>
+                            ))}
+                            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-4 py-2 rounded-xl hover:bg-gray-50 disabled:opacity-30">
+                                <ArrowLeft className="h-4 w-4 rotate-180" />
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editar Item' : 'Nuevo Item'}>
+                <div className="space-y-4 pt-2">
                     <Input label="Nombre" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} required />
                     <Input label="Descripción" value={form.descripcion || ''} onChange={(e) => setForm({ ...form, descripcion: e.target.value })} />
                     <Input label="Tipo" value={form.tipo || ''} onChange={(e) => setForm({ ...form, tipo: e.target.value })} />
-                    <div className="grid grid-cols-2 gap-3">
-                        <Input label="En Stock" type="number" value={form.en_stock} onChange={(e) => setForm({ ...form, en_stock: +e.target.value })} />
-                        <Input label="En Uso" type="number" value={form.en_uso} onChange={(e) => setForm({ ...form, en_uso: +e.target.value })} />
-                    </div>
-                    <div className="flex justify-end gap-2 pt-2">
-                        <Button variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button>
-                        <Button onClick={handleSave} disabled={isCreating || isUpdating}>
+                    <Input label="Stock" type="number" value={form.en_stock} onChange={(e) => setForm({ ...form, en_stock: parseInt(e.target.value) || 0 })} />
+                    <Input label="En Uso" type="number" value={form.en_uso} onChange={(e) => setForm({ ...form, en_uso: parseInt(e.target.value) || 0 })} />
+                    <div className="flex justify-end gap-3 pt-4">
+                        <Button variant="ghost" onClick={() => setModalOpen(false)}>Cancelar</Button>
+                        <Button onClick={handleSave} disabled={isCreating || isUpdating} className="px-8">
                             {editing ? (isUpdating ? <Spinner size="sm" /> : 'Guardar') : (isCreating ? <Spinner size="sm" /> : 'Crear')}
                         </Button>
                     </div>
-
                 </div>
             </Modal>
+
             <Modal open={!!deleteModal} onClose={() => setDeleteModal(null)} title="Confirmar eliminación">
-                <p className="text-sm text-muted-foreground mb-4">¿Eliminar <strong>{deleteModal?.nombre}</strong>?</p>
-                <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => setDeleteModal(null)}>Cancelar</Button>
-                    <Button variant="destructive" onClick={handleDelete}>Eliminar</Button>
+                <div className="pt-2">
+                    <p className="text-sm text-muted-foreground mb-6">¿Estás seguro de eliminar <strong>{deleteModal?.nombre}</strong>?</p>
+                    <div className="flex justify-end gap-3">
+                        <Button variant="ghost" onClick={() => setDeleteModal(null)}>Cancelar</Button>
+                        <Button variant="destructive" onClick={handleDelete} className="px-8">Eliminar</Button>
+                    </div>
                 </div>
             </Modal>
         </div>

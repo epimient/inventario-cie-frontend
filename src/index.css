@@ -1,55 +1,90 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
-    --foreground: 224 71% 4%;
+    --background: 210 20% 98%;
+    --foreground: 160 10% 18%;
     --card: 0 0% 100%;
-    --card-foreground: 224 71% 4%;
-    --primary: 221 83% 53%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 220 9% 46%;
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
-    --accent: 220 14% 96%;
-    --accent-foreground: 224 71% 4%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-    --success: 142 76% 36%;
-    --success-foreground: 210 40% 98%;
+    --card-foreground: 160 10% 18%;
+    --primary: 153 32% 25%;
+    --primary-foreground: 0 0% 100%;
+    --primary-container: 150 30% 85%;
+    --primary-dim: 153 28% 22%;
+    --primary-fixed: 150 30% 85%;
+    --primary-fixed-dim: 150 28% 78%;
+    --secondary: 205 30% 42%;
+    --secondary-foreground: 0 0% 100%;
+    --secondary-container: 204 80% 90%;
+    --secondary-dim: 205 28% 38%;
+    --secondary-fixed: 204 80% 90%;
+    --secondary-fixed-dim: 204 80% 80%;
+    --tertiary: 205 25% 38%;
+    --tertiary-foreground: 214 80% 97%;
+    --tertiary-container: 204 80% 94%;
+    --tertiary-dim: 205 23% 32%;
+    --tertiary-fixed: 204 80% 94%;
+    --tertiary-fixed-dim: 204 80% 85%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 160 5% 45%;
+    --accent: 150 20% 94%;
+    --accent-foreground: 153 32% 25%;
+    --destructive: 0 63% 41%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 142 60% 45%;
+    --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
-    --warning-foreground: 224 71% 4%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 221 83% 53%;
-    --radius: 0.625rem;
+    --warning-foreground: 160 10% 15%;
+    --border: 210 20% 90%;
+    --input: 210 20% 90%;
+    --ring: 153 32% 25%;
+    --radius: 1rem;
+    --error-container: 0 63% 90%;
+    --on-error: 0 0% 100%;
+    --on-error-container: 0 75% 44%;
   }
 
   .dark {
-    --background: 224 71% 4%;
-    --foreground: 210 40% 98%;
-    --card: 223 47% 11%;
-    --card-foreground: 210 40% 98%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 222 47% 11%;
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 217 33% 17%;
-    --accent-foreground: 210 40% 98%;
+    --background: 160 20% 10%;
+    --foreground: 0 0% 98%;
+    --card: 160 15% 15%;
+    --card-foreground: 0 0% 98%;
+    --primary: 153 40% 45%;
+    --primary-foreground: 0 0% 100%;
+    --primary-container: 153 30% 20%;
+    --primary-dim: 153 35% 30%;
+    --primary-fixed: 150 30% 25%;
+    --primary-fixed-dim: 150 28% 18%;
+    --secondary: 205 30% 42%;
+    --secondary-foreground: 0 0% 100%;
+    --secondary-container: 205 30% 18%;
+    --secondary-dim: 205 28% 32%;
+    --secondary-fixed: 205 30% 20%;
+    --secondary-fixed-dim: 205 28% 15%;
+    --tertiary: 205 25% 38%;
+    --tertiary-foreground: 214 80% 97%;
+    --tertiary-container: 205 25% 15%;
+    --tertiary-dim: 205 23% 25%;
+    --tertiary-fixed: 205 25% 18%;
+    --tertiary-fixed-dim: 205 25% 12%;
+    --muted: 160 15% 20%;
+    --muted-foreground: 160 10% 65%;
+    --accent: 160 20% 20%;
+    --accent-foreground: 0 0% 98%;
     --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-    --success: 142 70% 45%;
-    --success-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 142 50% 40%;
+    --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
-    --warning-foreground: 224 71% 4%;
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 224 76% 48%;
+    --warning-foreground: 160 10% 15%;
+    --border: 160 20% 20%;
+    --input: 160 20% 20%;
+    --ring: 153 40% 45%;
+    --radius: 1rem;
+    --error-container: 0 63% 20%;
+    --on-error: 0 0% 100%;
+    --on-error-container: 0 75% 44%;
   }
 }
 
@@ -88,5 +123,10 @@
 
   .glass-card {
     @apply bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/30 dark:border-white/10 shadow-lg shadow-black/5 dark:shadow-black/20;
+  }
+
+  /* Material Symbols Outlined */
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
   }
 }

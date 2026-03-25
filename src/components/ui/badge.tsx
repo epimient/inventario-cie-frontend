@@ -1,11 +1,11 @@
 import { cn } from '@/utils/cn';
 
 const badgeVariants = {
-    default: 'bg-primary/10 text-primary border-primary/20',
-    success: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
-    warning: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
-    destructive: 'bg-destructive/10 text-destructive border-destructive/20',
-    secondary: 'bg-secondary text-secondary-foreground border-secondary',
+    default: 'bg-[#E8F3EE] text-[#415A52]',
+    success: 'bg-[#E8F3EE] text-[#415A52]', // Using main green for success
+    warning: 'bg-amber-50 text-amber-700',
+    destructive: 'bg-red-50 text-red-700',
+    secondary: 'bg-gray-100 text-gray-700',
 };
 
 interface BadgeProps {
@@ -18,7 +18,7 @@ export function Badge({ variant = 'default', children, className }: BadgeProps) 
     return (
         <span
             className={cn(
-                'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors',
+                'inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest transition-colors',
                 badgeVariants[variant],
                 className,
             )}

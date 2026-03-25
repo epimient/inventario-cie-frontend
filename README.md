@@ -644,6 +644,14 @@ Para soporte técnico, contactar al equipo de desarrollo del CIE.
 
 ---
 
+## 📖 Documentación
+
+- **[Manual de Usuario](./docs/MANUAL_USUARIO.md)** - Guía completa para usuarios finales
+- **[Guía de Desarrollo](./docs/GUIA_FRONTEND.md)** - Documentación técnica del frontend
+- **[Alertas Configurables](./docs/ALERTAS_CONFIGURABLES.md)** - Configuración de alertas del sistema
+
+---
+
 ## 🙏 Agradecimientos
 
 - **React Team** - Framework UI

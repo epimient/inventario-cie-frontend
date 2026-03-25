@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, History, ArrowUpRight, ArrowDownLeft, RefreshCcw, AlertTriangle, Trash2, ArrowRightLeft } from 'lucide-react';
+import { Search, History, ArrowUpRight, ArrowDownLeft, RefreshCcw, AlertTriangle, Trash2, ArrowRightLeft, Filter, Download } from 'lucide-react';
 import { Table } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,13 +12,13 @@ import { formatDate } from '@/utils/formatters';
 import type { Movimiento } from '@/types';
 
 const tipoIcons: Record<string, any> = {
-    entrada: <ArrowDownLeft className="h-4 w-4 text-success" />,
-    salida: <ArrowUpRight className="h-4 w-4 text-warning" />,
-    devolucion: <RefreshCcw className="h-4 w-4 text-primary" />,
-    daño: <AlertTriangle className="h-4 w-4 text-destructive" />,
-    ajuste_stock: <History className="h-4 w-4 text-muted-foreground" />,
-    baja: <Trash2 className="h-4 w-4 text-destructive" />,
-    transferencia: <ArrowRightLeft className="h-4 w-4 text-blue-500" />,
+    entrada: <ArrowDownLeft className="h-4 w-4 text-emerald-500" />,
+    salida: <ArrowUpRight className="h-4 w-4 text-amber-500" />,
+    devolucion: <RefreshCcw className="h-4 w-4 text-blue-500" />,
+    daño: <AlertTriangle className="h-4 w-4 text-red-500" />,
+    ajuste_stock: <History className="h-4 w-4 text-gray-500" />,
+    baja: <Trash2 className="h-4 w-4 text-red-500" />,
+    transferencia: <ArrowRightLeft className="h-4 w-4 text-indigo-500" />,
 };
 
 export default function MovimientosPage() {
@@ -30,18 +30,15 @@ export default function MovimientosPage() {
 
     const [search, setSearch] = useState('');
 
-    // Manejo de errores de API
     if (isError) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
                 <AlertTriangle className="h-12 w-12 text-destructive" />
                 <div className="text-center space-y-2">
                     <h3 className="font-semibold">Error al cargar movimientos</h3>
-                    <p className="text-sm text-muted-foreground">
-                        {error?.message || 'No se pudo conectar con el servidor'}
-                    </p>
+                    <p className="text-sm text-muted-foreground">{error?.message || 'No se pudo conectar con el servidor'}</p>
                 </div>
-                <Button variant="outline" onClick={() => window.location.reload()}>
+                <Button variant="outline" onClick={() => window.location.reload()} className="rounded-full">
                     Intentar de nuevo
                 </Button>
             </div>
@@ -66,38 +63,53 @@ export default function MovimientosPage() {
     });
 
     const columns = [
-        { key: 'id', header: 'ID', className: 'w-12 font-mono' },
+        { key: 'id', header: 'ID', className: 'w-16 font-mono text-muted-foreground' },
         {
             key: 'tipo',
-            header: 'Tipo',
+            header: 'Tipo de Mov.',
             render: (m: Movimiento) => (
-                <div className="flex items-center gap-2">
-                    {tipoIcons[m.tipo]}
-                    <span className="capitalize">{m.tipo.replace('_', ' ')}</span>
+                <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100">
+                        {tipoIcons[m.tipo]}
+                    </div>
+                    <span className="capitalize font-semibold text-[#1a1f1c]">{m.tipo.replace('_', ' ')}</span>
                 </div>
             )
         },
-        { key: 'item', header: 'Ítem', render: (m: Movimiento) => getItemName(m) },
-        { key: 'cantidad', header: 'Cant.', className: 'text-center' },
-        { key: 'descripcion', header: 'Descripción', className: 'max-w-xs truncate' },
-        { key: 'fecha', header: 'Fecha', render: (m: Movimiento) => formatDate(m.created_at) },
+        { key: 'item', header: 'Ítem Afectado', render: (m: Movimiento) => <span className="font-medium">{getItemName(m)}</span> },
+        { key: 'descripcion', header: 'Descripción', className: 'max-w-xs truncate text-muted-foreground' },
+        { key: 'cantidad', header: 'Cantidad', className: 'text-center', render: (m: Movimiento) => <Badge variant={m.cantidad > 0 ? 'success' : 'secondary'}>{m.cantidad > 0 ? `+${m.cantidad}` : m.cantidad}</Badge> },
+        { key: 'fecha', header: 'Fecha', className: 'text-muted-foreground', render: (m: Movimiento) => formatDate(m.created_at) },
     ];
 
     return (
-        <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-                <div className="relative max-w-sm flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <div className="space-y-6 animate-fade-in pb-8">
+            {/* Toolbar */}
+            <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
+                <div className="relative w-full max-w-sm">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <input
-                        placeholder="Filtrar movimientos..."
+                        placeholder="Filtrar historial de movimientos..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="flex h-9 w-full rounded-lg border border-input bg-transparent pl-9 pr-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        className="flex h-12 w-full rounded-2xl border border-transparent bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] pl-12 pr-4 text-sm placeholder:text-muted-foreground transition-all hover:border-gray-100 focus:outline-none focus:ring-2 focus:ring-[#E8F3EE] focus:border-[#415A52]"
                     />
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <button className="h-12 px-5 rounded-2xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] text-[#1a1f1c] font-semibold text-sm flex items-center gap-2 hover:bg-gray-50 transition-colors">
+                        <Filter className="h-4 w-4" /> Filter
+                    </button>
+                    <button className="h-12 px-5 rounded-2xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] text-[#1a1f1c] font-semibold text-sm flex items-center gap-2 hover:bg-gray-50 transition-colors">
+                        <Download className="h-4 w-4" /> Export CSV
+                    </button>
                 </div>
             </div>
 
-            <Table columns={columns} data={filtered} loading={isLoading} emptyMessage="No se registran movimientos" />
+            {/* Main Table Card */}
+            <div className="bg-white rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100/50 overflow-hidden">
+                <Table columns={columns} data={filtered} loading={isLoading} emptyMessage="No se registran movimientos" />
+            </div>
         </div>
     );
 }

@@ -1,23 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Save, AlertTriangle, Package, ClipboardList, Monitor, Settings } from 'lucide-react';
+import { Save, AlertTriangle, Package, ClipboardList, Monitor, Cpu, Bot, Settings, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Modal } from '@/components/ui/modal';
 import { useToast } from '@/components/ui/toast';
 import { useAuth } from '@/contexts/auth-context';
 import { configuracionService, ConfiguracionAlerta } from '@/services/configuracion';
 import { getErrorMessage } from '@/utils/error-handler';
-import { Navigate } from 'react-router-dom';
+import { Spinner } from '@/components/ui/spinner';
 
 export default function ConfiguracionPage() {
     const { toast } = useToast();
     const queryClient = useQueryClient();
     const { hasRole } = useAuth();
-
-    // Solo admins pueden ver esta página
-    if (!hasRole(['admin'])) {
-        return <Navigate to="/dashboard" replace />;
-    }
+    const [modalOpen, setModalOpen] = useState(true);
 
     const { data: configuraciones = [], isLoading, isError, error } = useQuery({
         queryKey: ['configuracion-alertas'],
@@ -29,9 +26,6 @@ export default function ConfiguracionPage() {
             configuracionService.update(clave, valor),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['configuracion-alertas'] });
-            // Forzamos actualización de alertas
-            queryClient.invalidateQueries({ queryKey: ['materiales'] });
-            queryClient.invalidateQueries({ queryKey: ['prestamos'] });
             toast('Configuración actualizada', 'success');
         },
         onError: (err: any) => {
@@ -39,47 +33,57 @@ export default function ConfiguracionPage() {
         }
     });
 
-    const EditableRow = ({ config }: { config: ConfiguracionAlerta }) => {
-        const [valor, setValor] = useState(config.valor.toString());
-        const isModified = valor !== config.valor.toString();
+    const getConfigIcon = (clave: string) => {
+        if (clave.includes('stock') || clave.includes('material')) return <Package className="h-5 w-5 text-[#4f645b]" />;
+        if (clave.includes('prestamo') || clave.includes('vencer')) return <ClipboardList className="h-5 w-5 text-[#486277]" />;
+        if (clave.includes('equipo') || clave.includes('danado')) return <Monitor className="h-5 w-5 text-red-500" />;
+        if (clave.includes('electronica')) return <Cpu className="h-5 w-5 text-blue-500" />;
+        if (clave.includes('robotica')) return <Bot className="h-5 w-5 text-purple-500" />;
+        return <Settings className="h-5 w-5 text-muted-foreground" />;
+    };
 
-        const handleSave = () => {
-            const num = parseInt(valor);
-            if (isNaN(num)) {
-                toast('Debe ingresar un valor numérico válido', 'error');
-                return;
-            }
-            updateMutation.mutate({ clave: config.clave, valor: num });
-        };
+    const getConfigCategory = (clave: string): string => {
+        if (clave.includes('stock') || clave.includes('material')) return 'stock';
+        if (clave.includes('prestamo') || clave.includes('vencer')) return 'prestamos';
+        if (clave.includes('equipo') || clave.includes('danado')) return 'equipos';
+        if (clave.includes('electronica')) return 'electronica';
+        if (clave.includes('robotica')) return 'robotica';
+        return 'general';
+    };
 
-        return (
-            <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
-                    <Input
-                        type="number"
-                        value={valor}
-                        onChange={(e) => setValor(e.target.value)}
-                        className="flex-1 h-9 font-medium"
-                    />
-                    <Button
-                        size="md"
-                        variant={isModified ? 'primary' : 'secondary'}
-                        disabled={!isModified || updateMutation.isPending}
-                        onClick={handleSave}
-                        className="shrink-0"
-                    >
-                        <Save className="h-4 w-4 mr-2" />
-                        Guardar
-                    </Button>
-                </div>
-            </div>
-        );
+    const groupedConfigs = configuraciones.reduce((acc, config) => {
+        const category = getConfigCategory(config.clave);
+        if (!acc[category]) acc[category] = [];
+        acc[category].push(config);
+        return acc;
+    }, {} as Record<string, ConfiguracionAlerta[]>);
+
+    const getCategoryLabel = (category: string) => {
+        switch (category) {
+            case 'stock': return 'Alertas de Stock';
+            case 'prestamos': return 'Alertas de Préstamos';
+            case 'equipos': return 'Alertas de Equipos';
+            case 'electronica': return 'Alertas de Electrónica';
+            case 'robotica': return 'Alertas de Robótica';
+            default: return 'General';
+        }
+    };
+
+    const getCategoryIcon = (category: string) => {
+        switch (category) {
+            case 'stock': return <Package className="h-5 w-5" />;
+            case 'prestamos': return <ClipboardList className="h-5 w-5" />;
+            case 'equipos': return <Monitor className="h-5 w-5" />;
+            case 'electronica': return <Cpu className="h-5 w-5" />;
+            case 'robotica': return <Bot className="h-5 w-5" />;
+            default: return <Settings className="h-5 w-5" />;
+        }
     };
 
     if (isError) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-                <AlertTriangle className="h-12 w-12 text-destructive" />
+                <AlertTriangle className="h-12 w-12 text-red-500" />
                 <div className="text-center space-y-2">
                     <h3 className="font-semibold">Error al cargar la configuración</h3>
                     <p className="text-sm text-muted-foreground">{error?.message || 'Revisa tu conexión'}</p>
@@ -89,60 +93,140 @@ export default function ConfiguracionPage() {
         );
     }
 
-    const getConfigIcon = (clave: string) => {
-        if (clave.includes('stock')) return <Package className="h-5 w-5 text-primary" />;
-        if (clave.includes('prestamo')) return <ClipboardList className="h-5 w-5 text-blue-500" />;
-        if (clave.includes('equipo') || clave.includes('danado')) return <Monitor className="h-5 w-5 text-destructive" />;
-        return <Settings className="h-5 w-5 text-muted-foreground" />;
+    return (
+        <div className="animate-fade-in">
+            <Modal 
+                open={modalOpen} 
+                onClose={() => setModalOpen(false)}
+                title="Configuración del Sistema"
+                className="max-w-3xl"
+            >
+                <div className="pt-2 pb-4">
+                    <p className="text-sm text-muted-foreground mb-6">
+                        Configura los umbrales y límites del sistema. Los cambios se guardan automáticamente al hacer clic en Guardar.
+                    </p>
+
+                    {isLoading ? (
+                        <div className="flex items-center justify-center py-12">
+                            <Spinner size="lg" />
+                        </div>
+                    ) : configuraciones.length === 0 ? (
+                        <div className="text-center p-8 border border-dashed rounded-xl text-muted-foreground">
+                            No hay configuraciones disponibles. Contacta al administrador.
+                        </div>
+                    ) : (
+                        <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2">
+                            {Object.entries(groupedConfigs).map(([category, configs]) => (
+                                <div key={category} className="space-y-3">
+                                    <div className="flex items-center gap-2 text-[#4f645b] font-semibold border-b pb-2">
+                                        {getCategoryIcon(category)}
+                                        <span>{getCategoryLabel(category)}</span>
+                                    </div>
+                                    <div className="grid gap-3">
+                                        {configs.map((config) => (
+                                            <ConfigRow 
+                                                key={config.id} 
+                                                config={config} 
+                                                updateMutation={updateMutation}
+                                                getIcon={getConfigIcon}
+                                                toast={toast}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
+                        <Button 
+                            variant="outline" 
+                            onClick={() => setModalOpen(false)}
+                        >
+                            Cerrar
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
+        </div>
+    );
+}
+
+function ConfigRow({ 
+    config, 
+    updateMutation, 
+    getIcon,
+    toast
+}: { 
+    config: ConfiguracionAlerta; 
+    updateMutation: any;
+    getIcon: (clave: string) => JSX.Element;
+    toast: any;
+}) {
+    const [valor, setValor] = useState(config.valor.toString());
+    const [isModified, setIsModified] = useState(false);
+
+    useEffect(() => {
+        setValor(config.valor.toString());
+        setIsModified(false);
+    }, [config.valor]);
+
+    const handleChange = (newValue: string) => {
+        setValor(newValue);
+        setIsModified(newValue !== config.valor.toString());
+    };
+
+    const handleSave = () => {
+        const num = parseInt(valor);
+        if (isNaN(num)) {
+            toast('Debe ingresar un valor numérico válido', 'error');
+            return;
+        }
+        updateMutation.mutate({ clave: config.clave, valor: num });
+        setIsModified(false);
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            handleSave();
+        }
     };
 
     return (
-        <div className="space-y-6">
-            <div className="mb-6">
-                <p className="text-muted-foreground">
-                    Define los umbrales operativos globales del sistema para las alertas de préstamos, stock límite y límites de usuario.
+        <div className="flex items-center gap-4 p-3 bg-gray-50 dark:bg-slate-800 rounded-lg">
+            <div className="p-2 bg-white dark:bg-slate-700 rounded-lg shadow-sm">
+                {getIcon(config.clave)}
+            </div>
+            <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-[#2d3335] dark:text-white truncate">
+                    {config.descripcion || config.clave.replace(/_/g, ' ').toUpperCase()}
+                </p>
+                <p className="text-xs text-muted-foreground truncate" title={config.clave}>
+                    {config.clave}
                 </p>
             </div>
-
-            {isLoading ? (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {[1, 2, 3, 4].map((i) => (
-                        <div key={i} className="rounded-xl border bg-card p-6 shadow-sm animate-pulse">
-                            <div className="h-10 w-10 bg-muted rounded-full mb-4"></div>
-                            <div className="h-5 w-2/3 bg-muted rounded mb-2"></div>
-                            <div className="h-4 w-full bg-muted rounded mb-6"></div>
-                            <div className="h-10 w-full bg-muted rounded"></div>
-                        </div>
-                    ))}
-                </div>
-            ) : configuraciones.length === 0 ? (
-                <div className="text-center p-12 border border-dashed rounded-xl text-muted-foreground">
-                    No se encontró configuración.
-                </div>
-            ) : (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {configuraciones.map((config) => (
-                        <div key={config.id} className="flex flex-col rounded-xl border bg-card p-5 shadow-sm transition-all hover:shadow-md">
-                            <div className="flex items-center gap-3 mb-3">
-                                <div className="p-2 bg-primary/10 rounded-lg">
-                                    {getConfigIcon(config.clave)}
-                                </div>
-                                <h3 className="font-semibold text-sm leading-tight break-words">
-                                    {config.descripcion || config.clave.replace(/_/g, ' ').toUpperCase()}
-                                </h3>
-                            </div>
-                            <div className="mt-auto pt-4 border-t">
-                                <div className="flex flex-col space-y-1.5 mb-3">
-                                    <span className="text-xs text-muted-foreground font-mono truncate" title={config.clave}>
-                                        Clave: {config.clave}
-                                    </span>
-                                </div>
-                                <EditableRow config={config} />
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
+            <div className="flex items-center gap-2">
+                <Input
+                    type="number"
+                    value={valor}
+                    onChange={(e) => handleChange(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    className="w-20 h-9 text-center font-mono"
+                />
+                <Button
+                    size="sm"
+                    variant={isModified ? 'primary' : 'outline'}
+                    disabled={!isModified || updateMutation.isPending}
+                    onClick={handleSave}
+                    className="shrink-0"
+                >
+                    {updateMutation.isPending ? (
+                        <Spinner size="sm" />
+                    ) : (
+                        <Save className="h-4 w-4" />
+                    )}
+                </Button>
+            </div>
         </div>
     );
 }

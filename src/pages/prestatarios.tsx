@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Search, AlertTriangle } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, AlertTriangle, Filter, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table } from '@/components/ui/table';
@@ -12,7 +12,6 @@ import { formatDate } from '@/utils/formatters';
 import { getErrorMessage } from '@/utils/error-handler';
 import type { Prestatario, PrestatarioCreate } from '@/types';
 import { Spinner } from '@/components/ui/spinner';
-
 
 export default function PrestatariosPage() {
     const { prestatarios: items, isLoading, isError, error, createPrestatario, updatePrestatario, deletePrestatario, isCreating, isUpdating } = usePrestatarios();
@@ -27,24 +26,20 @@ export default function PrestatariosPage() {
     const { hasRole } = useAuth();
     const canEdit = hasRole(['admin', 'inventory']);
 
-    // Manejo de errores de API
     if (isError) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
                 <AlertTriangle className="h-12 w-12 text-destructive" />
                 <div className="text-center space-y-2">
                     <h3 className="font-semibold">Error al cargar prestatarios</h3>
-                    <p className="text-sm text-muted-foreground">
-                        {error?.message || 'No se pudo conectar con el servidor'}
-                    </p>
+                    <p className="text-sm text-muted-foreground">{error?.message || 'No se pudo conectar con el servidor'}</p>
                 </div>
-                <Button variant="outline" onClick={() => window.location.reload()}>
+                <Button variant="outline" onClick={() => window.location.reload()} className="rounded-full">
                     Intentar de nuevo
                 </Button>
             </div>
         );
     }
-
 
     const openCreate = () => {
         setEditing(null);
@@ -77,7 +72,6 @@ export default function PrestatariosPage() {
         }
     };
 
-
     const handleDelete = async () => {
         if (!deleteModal) return;
         try {
@@ -89,18 +83,21 @@ export default function PrestatariosPage() {
         }
     };
 
-
     const filtered = items.filter((e) =>
         (e.nombre || '').toLowerCase().includes(search.toLowerCase()) ||
         (e.dependencia || '').toLowerCase().includes(search.toLowerCase()),
     );
 
     const columns = [
-        { key: 'nombre', header: 'Nombre' },
-        { key: 'cedula', header: 'Cédula', render: (e: Prestatario) => e.cedula || '-' },
-        { key: 'dependencia', header: 'Dependencia' },
-        { key: 'telefono', header: 'Teléfono', render: (e: Prestatario) => e.telefono || '-' },
-        { key: 'email', header: 'Email', render: (e: Prestatario) => e.email || '-' },
+        {
+            key: 'nombre',
+            header: 'Nombre',
+            render: (e: Prestatario) => <span className="font-bold text-[#1a1f1c]">{e.nombre}</span>
+        },
+        { key: 'cedula', header: 'Cédula', className: 'font-mono text-muted-foreground', render: (e: Prestatario) => e.cedula || '-' },
+        { key: 'dependencia', header: 'Dependencia', render: (e: Prestatario) => <span className="font-semibold">{e.dependencia}</span> },
+        { key: 'telefono', header: 'Teléfono', className: 'text-muted-foreground', render: (e: Prestatario) => e.telefono || '-' },
+        { key: 'email', header: 'Email', className: 'text-muted-foreground', render: (e: Prestatario) => e.email || '-' },
         {
             key: 'activo', header: 'Estado',
             render: (e: Prestatario) => (
@@ -110,63 +107,82 @@ export default function PrestatariosPage() {
             ),
         },
         ...(canEdit ? [{
-            key: 'actions', header: '', className: 'w-24',
+            key: 'actions', header: '', className: 'w-24 text-right',
             render: (e: Prestatario) => (
-                <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" onClick={(ev) => { ev.stopPropagation(); openEdit(e); }}>
-                        <Pencil className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={(ev) => { ev.stopPropagation(); setDeleteModal(e); }}>
-                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                    </Button>
+                <div className="flex justify-end gap-2 pr-4">
+                    <button className="text-muted-foreground hover:text-[#415A52] transition-colors p-2" onClick={(ev) => { ev.stopPropagation(); openEdit(e); }}>
+                        <Pencil className="h-4 w-4" />
+                    </button>
+                    <button className="text-muted-foreground hover:text-destructive transition-colors p-2" onClick={(ev) => { ev.stopPropagation(); setDeleteModal(e); }}>
+                        <Trash2 className="h-4 w-4" />
+                    </button>
                 </div>
             ),
         }] : []),
     ];
 
     return (
-        <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-                <div className="relative max-w-sm flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <div className="space-y-6 animate-fade-in pb-8">
+            {/* Toolbar */}
+            <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
+                <div className="relative w-full max-w-sm">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <input
                         placeholder="Buscar prestatarios..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="flex h-9 w-full rounded-lg border border-input bg-transparent pl-9 pr-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        className="flex h-12 w-full rounded-2xl border border-transparent bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] pl-12 pr-4 text-sm placeholder:text-muted-foreground transition-all hover:border-gray-100 focus:outline-none focus:ring-2 focus:ring-[#E8F3EE] focus:border-[#415A52]"
                     />
                 </div>
-                {canEdit && (
-                    <Button onClick={openCreate}>
-                        <Plus className="h-4 w-4" /> Nuevo prestatario
-                    </Button>
-                )}
+
+                <div className="flex items-center gap-3">
+                    <button className="h-12 px-5 rounded-2xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] text-[#1a1f1c] font-semibold text-sm flex items-center gap-2 hover:bg-gray-50 transition-colors">
+                        <Filter className="h-4 w-4" /> Filter
+                    </button>
+                    <button className="h-12 px-5 rounded-2xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] text-[#1a1f1c] font-semibold text-sm flex items-center gap-2 hover:bg-gray-50 transition-colors">
+                        <Download className="h-4 w-4" /> Export
+                    </button>
+                    {canEdit && (
+                        <Button onClick={openCreate} className="h-12 px-6 rounded-2xl gap-2 font-bold shadow-md">
+                            <Plus className="h-4 w-4" /> Nuevo Prestatario
+                        </Button>
+                    )}
+                </div>
             </div>
-            <Table columns={columns} data={filtered} loading={isLoading} />
 
+            {/* Main Table Card */}
+            <div className="bg-white rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100/50 overflow-hidden">
+                <Table columns={columns} data={filtered} loading={isLoading} />
+            </div>
 
-            <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editar' : 'Nuevo prestatario'}>
-                <div className="space-y-3">
-                    <Input label="Nombre" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} required />
-                    <Input label="Cédula" value={form.cedula || ''} onChange={(e) => setForm({ ...form, cedula: e.target.value })} />
+            {/* Modals */}
+            <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editar Prestatario' : 'Nuevo Prestatario'}>
+                <div className="space-y-4 pt-2">
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input label="Nombre" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} required />
+                        <Input label="Cédula" value={form.cedula || ''} onChange={(e) => setForm({ ...form, cedula: e.target.value })} />
+                    </div>
                     <Input label="Dependencia" value={form.dependencia} onChange={(e) => setForm({ ...form, dependencia: e.target.value })} required />
-                    <Input label="Teléfono" value={form.telefono || ''} onChange={(e) => setForm({ ...form, telefono: e.target.value })} />
-                    <Input label="Email" type="email" value={form.email || ''} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-                    <div className="flex justify-end gap-2 pt-2">
-                        <Button variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button>
-                        <Button onClick={handleSave} disabled={isCreating || isUpdating}>
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input label="Teléfono" value={form.telefono || ''} onChange={(e) => setForm({ ...form, telefono: e.target.value })} />
+                        <Input label="Email" type="email" value={form.email || ''} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                    </div>
+                    <div className="flex justify-end gap-3 pt-4">
+                        <Button variant="ghost" onClick={() => setModalOpen(false)}>Cancelar</Button>
+                        <Button onClick={handleSave} disabled={isCreating || isUpdating} className="px-8">
                             {editing ? (isUpdating ? <Spinner size="sm" /> : 'Guardar') : (isCreating ? <Spinner size="sm" /> : 'Crear')}
                         </Button>
                     </div>
-
                 </div>
             </Modal>
 
-            <Modal open={!!deleteModal} onClose={() => setDeleteModal(null)} title="Confirmar">
-                <p className="text-sm text-muted-foreground mb-4">¿Inactivar a <strong>{deleteModal?.nombre}</strong>?</p>
-                <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => setDeleteModal(null)}>Cancelar</Button>
-                    <Button variant="destructive" onClick={handleDelete}>Inactivar</Button>
+            <Modal open={!!deleteModal} onClose={() => setDeleteModal(null)} title="Confirmar Inactivación">
+                <div className="pt-2">
+                    <p className="text-sm text-muted-foreground mb-6 leading-relaxed">¿Inactivar a <strong className="text-foreground">{deleteModal?.nombre}</strong>? El usuario ya no podrá recibir préstamos.</p>
+                    <div className="flex justify-end gap-3">
+                        <Button variant="ghost" onClick={() => setDeleteModal(null)}>Cancelar</Button>
+                        <Button variant="destructive" onClick={handleDelete} className="px-8">Inactivar</Button>
+                    </div>
                 </div>
             </Modal>
         </div>

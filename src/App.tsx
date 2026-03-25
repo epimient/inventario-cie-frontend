@@ -11,12 +11,14 @@ import Login from '@/pages/login';
 import Dashboard from '@/pages/dashboard';
 import Equipos from '@/pages/equipos';
 import Electronica from '@/pages/electronica';
-import Robots from '@/pages/robots';
+import Robotica from '@/pages/robotica';
 import Materiales from '@/pages/materiales';
-import Prestatarios from '@/pages/prestatarios';
 import Prestamos from '@/pages/prestamos';
+import Prestatarios from '@/pages/prestatarios';
+import NuevoPrestamo from '@/pages/nuevo-prestamo';
+import Danados from '@/pages/danados';
 import Movimientos from '@/pages/movimientos';
-import Exportar from '@/pages/exportar';
+import Reportes from '@/pages/reportes';
 import Configuracion from '@/pages/configuracion';
 
 const queryClient = new QueryClient({
@@ -24,7 +26,7 @@ const queryClient = new QueryClient({
         queries: {
             retry: 1,
             refetchOnWindowFocus: false,
-            staleTime: 1000 * 30, // 30 seconds — short enough to refetch after invalidation
+            staleTime: 1000 * 30,
             refetchOnMount: true,
         },
     },
@@ -45,12 +47,14 @@ function App() {
                                     <Route path="/dashboard" element={<Dashboard />} />
                                     <Route path="/equipos" element={<Equipos />} />
                                     <Route path="/electronica" element={<Electronica />} />
-                                    <Route path="/robots" element={<Robots />} />
+                                    <Route path="/robotica" element={<Robotica />} />
                                     <Route path="/materiales" element={<Materiales />} />
-                                    <Route path="/prestatarios" element={<Prestatarios />} />
                                     <Route path="/prestamos" element={<Prestamos />} />
+                                    <Route path="/prestamos/nuevo" element={<NuevoPrestamo />} />
+                                    <Route path="/prestatarios" element={<Prestatarios />} />
                                     <Route path="/movimientos" element={<Movimientos />} />
-                                    <Route path="/exportar" element={<Exportar />} />
+                                    <Route path="/danados" element={<Danados />} />
+                                    <Route path="/reportes" element={<Reportes />} />
                                     <Route path="/configuracion" element={<Configuracion />} />
                                     {/* Fallback */}
                                     <Route path="*" element={<Navigate to="/dashboard" replace />} />
