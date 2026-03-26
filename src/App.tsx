@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/contexts/theme-context';
 import { ToastProvider } from '@/components/ui/toast';
 import { Layout } from '@/components/layout/layout';
 import { ProtectedRoute } from '@/components/layout/protected-route';
+import { ErrorBoundary } from '@/components/error-boundary';
 
 // Pages
 import Login from '@/pages/login';
@@ -35,11 +36,12 @@ const queryClient = new QueryClient({
 
 function App() {
     return (
-        <QueryClientProvider client={queryClient}>
-            <ThemeProvider>
-                <AuthProvider>
-                    <ToastProvider>
-                        <Router>
+        <ErrorBoundary>
+            <QueryClientProvider client={queryClient}>
+                <ThemeProvider>
+                    <AuthProvider>
+                        <ToastProvider>
+                            <Router>
                             <Routes>
                                 <Route path="/login" element={<Login />} />
                                     <Route path="/registro" element={<Registro />} />
@@ -67,6 +69,7 @@ function App() {
                 </AuthProvider>
             </ThemeProvider>
         </QueryClientProvider>
+        </ErrorBoundary>
     );
 }
 
