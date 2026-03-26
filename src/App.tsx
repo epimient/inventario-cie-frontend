@@ -10,6 +10,7 @@ import { ErrorBoundary } from '@/components/error-boundary';
 // Pages
 import Login from '@/pages/login';
 import Registro from '@/pages/registro';
+import AuthCallback from '@/pages/auth-callback';
 import Dashboard from '@/pages/dashboard';
 import Equipos from '@/pages/equipos';
 import Electronica from '@/pages/electronica';
@@ -44,7 +45,8 @@ function App() {
                             <Router>
                             <Routes>
                                 <Route path="/login" element={<Login />} />
-                                    <Route path="/registro" element={<Registro />} />
+                                <Route path="/registro" element={<Registro />} />
+                                <Route path="/auth/callback" element={<AuthCallback />} />
 
                                 <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
                                     <Route path="/" element={<Navigate to="/dashboard" replace />} />
