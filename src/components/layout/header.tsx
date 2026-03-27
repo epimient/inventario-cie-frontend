@@ -1,6 +1,7 @@
 import { Bell, LogOut, Search, Menu, UserCircle, Moon, Sun, X, AlertTriangle, CheckCircle, Trash2, Check } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { useTheme } from '@/contexts/theme-context';
+import { useSearch } from '@/contexts/search-context';
 import { Button } from '@/components/ui/button';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -24,6 +25,7 @@ interface HeaderProps {
 export function Header({ title, subtitle, onMenuClick }: HeaderProps) {
     const { user, logout } = useAuth();
     const { theme, toggleTheme } = useTheme();
+    const { searchQuery, setSearchQuery } = useSearch();
     const navigate = useNavigate();
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [notifOpen, setNotifOpen] = useState(false);
@@ -84,70 +86,78 @@ export function Header({ title, subtitle, onMenuClick }: HeaderProps) {
     };
 
     return (
-        <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b bg-white/70 backdrop-blur-xl px-8 shadow-sm shadow-emerald-900/5 dark:bg-[#131C17]/70 dark:border-[#2A3D32]">
+        <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b bg-white/70 dark:bg-[#13152d]/70 backdrop-blur-xl px-8 shadow-sm shadow-emerald-900/5 dark:shadow-black/20 dark:border-[#292a69]">
             <div className="flex items-center gap-4">
                 {onMenuClick && (
-                    <Button variant="ghost" size="icon" onClick={onMenuClick} className="lg:hidden text-muted-foreground hover:text-foreground">
+                    <Button variant="ghost" size="icon" onClick={onMenuClick} className="lg:hidden text-muted-foreground dark:text-[#dddeff] hover:text-foreground dark:hover:text-[#fdfdfd]">
                         <Menu className="h-6 w-6" />
                     </Button>
                 )}
                 <div className="flex items-center gap-2">
-                    <h1 className="text-xl font-bold text-[#1a1f1c] dark:text-white">Inventario CIE API</h1>
-                    <span className="text-gray-300 dark:text-slate-600 mx-2 text-xl">|</span>
-                    <span className="text-muted-foreground dark:text-slate-400 font-medium">{title}</span>
+                    <h1 className="text-xl font-bold text-[#1a1f1c] dark:text-[#fdfdfd]">Inventario CIE API</h1>
+                    <span className="text-gray-300 dark:text-[#292a69] mx-2 text-xl">|</span>
+                    <span className="text-muted-foreground dark:text-[#dddeff] font-medium">{title}</span>
                 </div>
             </div>
 
-            {/* Center Search Bar */}
+            {/* Center Search Bar - Global Search */}
             <div className="hidden md:flex relative w-full max-w-md mx-4">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/60 dark:text-slate-400" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/60 dark:text-[#dddeff]" />
                 <input
                     type="text"
                     placeholder="Buscar en el inventario..."
-                    className="w-full h-11 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors rounded-full pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#E8F3EE] focus:border-[#4f645b] border border-transparent dark:text-white"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            // Navegar a la página de equipos con el término de búsqueda
+                            navigate(`/equipos?search=${encodeURIComponent(searchQuery)}`);
+                        }
+                    }}
+                    className="w-full h-11 bg-slate-100 dark:bg-[#292a69] hover:bg-slate-200 dark:hover:bg-[#3b438e]/50 transition-colors rounded-full pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#E8F3EE] dark:focus:ring-[#3b438e]/50 focus:border-[#4f645b] dark:focus:border-[#3b438e] border border-transparent dark:text-[#fdfdfd] dark:placeholder:text-[#7b7b8b]"
                 />
             </div>
 
             <div className="flex items-center gap-3">
                 {/* Notifications */}
                 <div className="relative" ref={notifRef}>
-                    <button 
+                    <button
                         onClick={() => setNotifOpen(!notifOpen)}
-                        className="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        className="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-[#292a69] transition-colors"
                     >
-                        <Bell className="h-5 w-5 text-[#5a6062] dark:text-slate-400" />
+                        <Bell className="h-5 w-5 text-[#5a6062] dark:text-[#dddeff]" />
                         {notificacionesNoLeidas > 0 && (
-                            <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-red-500 border-2 border-white dark:border-slate-900 text-[10px] text-white flex items-center justify-center font-bold">
+                            <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-red-500 border-2 border-white dark:border-[#13152d] text-[10px] text-white flex items-center justify-center font-bold">
                                 {notificacionesNoLeidas}
                             </span>
                         )}
                     </button>
 
                     {notifOpen && (
-                        <div className="absolute right-0 top-full mt-2 w-80 rounded-2xl border bg-white dark:bg-slate-800 shadow-xl animate-scale-in overflow-hidden dark:border-slate-700">
-                            <div className="px-4 py-3 border-b flex items-center justify-between bg-slate-50 dark:bg-slate-700/50">
-                                <h3 className="font-bold text-[#2d3335] dark:text-white">Notificaciones</h3>
-                                <button 
+                        <div className="absolute right-0 top-full mt-2 w-80 rounded-2xl border bg-white dark:bg-[#22214d] shadow-xl animate-scale-in overflow-hidden dark:border-[#292a69]">
+                            <div className="px-4 py-3 border-b flex items-center justify-between bg-slate-50 dark:bg-[#292a69]/50 dark:border-[#292a69]">
+                                <h3 className="font-bold text-[#2d3335] dark:text-[#fdfdfd]">Notificaciones</h3>
+                                <button
                                     onClick={() => setNotifOpen(false)}
-                                    className="p-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600"
+                                    className="p-1 rounded-full hover:bg-slate-200 dark:hover:bg-[#3b438e]"
                                 >
-                                    <X className="h-4 w-4 text-muted-foreground dark:text-slate-400" />
+                                    <X className="h-4 w-4 text-muted-foreground dark:text-[#dddeff]" />
                                 </button>
                             </div>
                             <div className="max-h-80 overflow-y-auto">
                                 {notificaciones.length === 0 ? (
-                                    <div className="px-4 py-8 text-center text-muted-foreground">
+                                    <div className="px-4 py-8 text-center text-muted-foreground dark:text-[#dddeff]">
                                         <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
                                         <p>No tienes notificaciones</p>
                                     </div>
                                 ) : (
                                     <>
                                         {notificaciones.map((notif) => (
-                                            <div 
+                                            <div
                                                 key={notif.id}
                                                 onClick={() => handleNotifClick(notif.id, notif.ruta)}
                                                 className={cn(
-                                                    "px-4 py-3 border-b hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors",
+                                                    "px-4 py-3 border-b hover:bg-slate-50 dark:hover:bg-[#292a69]/50 cursor-pointer transition-colors dark:border-[#292a69]",
                                                     !notif.leida && "bg-blue-50/50 dark:bg-blue-900/20"
                                                 )}
                                             >
@@ -163,8 +173,8 @@ export function Header({ title, subtitle, onMenuClick }: HeaderProps) {
                                                         {notif.tipo === 'success' && <CheckCircle className="h-4 w-4" />}
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <p className="text-sm font-semibold text-[#2d3335] dark:text-white">{notif.titulo}</p>
-                                                        <p className="text-xs text-muted-foreground dark:text-slate-400 truncate">{notif.descripcion}</p>
+                                                        <p className="text-sm font-semibold text-[#2d3335] dark:text-[#fdfdfd]">{notif.titulo}</p>
+                                                        <p className="text-xs text-muted-foreground dark:text-[#7b7b8b] truncate">{notif.descripcion}</p>
                                                     </div>
                                                     {!notif.leida && (
                                                         <div className="h-2 w-2 rounded-full bg-blue-500 shrink-0 mt-1"></div>
@@ -176,24 +186,24 @@ export function Header({ title, subtitle, onMenuClick }: HeaderProps) {
                                 )}
                             </div>
                             {notificaciones.length > 0 && (
-                                <div className="px-4 py-2 bg-slate-50 dark:bg-slate-700/50 flex justify-center gap-6">
-                                    <button 
+                                <div className="px-4 py-2 bg-slate-50 dark:bg-[#292a69]/50 flex justify-center gap-6 dark:border-t dark:border-[#292a69]">
+                                    <button
                                         onClick={() => { setNotifOpen(false); navigate('/notificaciones'); }}
-                                        className="text-[#4f645b] dark:text-emerald-400 hover:text-[#3a5046] dark:hover:text-emerald-300 p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-600"
+                                        className="text-[#4f645b] dark:text-[#5a62b8] hover:text-[#3a5046] dark:hover:text-[#7a82c8] p-1 rounded hover:bg-slate-200 dark:hover:bg-[#3b438e]"
                                         title="Ver todas"
                                     >
                                         <Bell className="h-4 w-4" />
                                     </button>
-                                    <button 
+                                    <button
                                         onClick={marcarTodasLeidas}
-                                        className="text-[#4f645b] dark:text-emerald-400 hover:text-[#3a5046] dark:hover:text-emerald-300 p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-600"
+                                        className="text-[#4f645b] dark:text-[#5a62b8] hover:text-[#3a5046] dark:hover:text-[#7a82c8] p-1 rounded hover:bg-slate-200 dark:hover:bg-[#3b438e]"
                                         title="Marcar todas como leídas"
                                     >
                                         <Check className="h-4 w-4" />
                                     </button>
-                                    <button 
+                                    <button
                                         onClick={limpiarNotificaciones}
-                                        className="text-red-500 hover:text-red-600 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20"
+                                        className="text-red-500 hover:text-red-600 dark:hover:text-red-400 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20"
                                         title="Limpiar todo"
                                     >
                                         <Trash2 className="h-4 w-4" />
@@ -201,10 +211,10 @@ export function Header({ title, subtitle, onMenuClick }: HeaderProps) {
                                 </div>
                             )}
                             {notificaciones.length === 0 && (
-                                <div className="px-4 py-2 bg-slate-50 dark:bg-slate-700/50 flex justify-center">
-                                    <button 
+                                <div className="px-4 py-2 bg-slate-50 dark:bg-[#292a69]/50 flex justify-center dark:border-t dark:border-[#292a69]">
+                                    <button
                                         onClick={() => { setNotifOpen(false); navigate('/notificaciones'); }}
-                                        className="text-[#4f645b] dark:text-emerald-400 hover:text-[#3a5046] dark:hover:text-emerald-300 p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-600"
+                                        className="text-[#4f645b] dark:text-[#5a62b8] hover:text-[#3a5046] dark:hover:text-[#7a82c8] p-1 rounded hover:bg-slate-200 dark:hover:bg-[#3b438e]"
                                         title="Ver todas"
                                     >
                                         <Bell className="h-4 w-4" />
@@ -216,13 +226,13 @@ export function Header({ title, subtitle, onMenuClick }: HeaderProps) {
                 </div>
 
                 {/* Theme Toggle */}
-                <button 
+                <button
                     onClick={toggleTheme}
-                    className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-[#292a69] transition-colors"
                     title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
                 >
                     {theme === 'dark' ? (
-                        <Sun className="h-5 w-5 text-slate-400" />
+                        <Sun className="h-5 w-5 text-[#dddeff]" />
                     ) : (
                         <Moon className="h-5 w-5 text-[#5a6062]" />
                     )}
@@ -235,24 +245,24 @@ export function Header({ title, subtitle, onMenuClick }: HeaderProps) {
                         className="flex items-center gap-3 text-left hover:opacity-80 transition-opacity"
                     >
                         <div className="hidden sm:flex flex-col items-end">
-                            <span className="font-bold text-sm text-[#1a1f1c] dark:text-white leading-tight">{user?.nombre || 'Usuario'}</span>
-                            <span className="text-[11px] text-muted-foreground dark:text-slate-400 capitalize font-medium">{user?.rol || 'Administrador'}</span>
+                            <span className="font-bold text-sm text-[#1a1f1c] dark:text-[#fdfdfd] leading-tight">{user?.nombre || 'Usuario'}</span>
+                            <span className="text-[11px] text-muted-foreground dark:text-[#dddeff] capitalize font-medium">{user?.rol || 'Administrador'}</span>
                         </div>
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1a1f1c] dark:bg-[#4f645b] text-white overflow-hidden">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1a1f1c] dark:bg-[#3b438e] text-white overflow-hidden">
                             <UserCircle className="h-full w-full opacity-80" />
                         </div>
                     </button>
 
                     {dropdownOpen && (
-                        <div className="absolute right-0 top-full mt-2 w-56 rounded-2xl border bg-white dark:bg-slate-800 p-2 shadow-xl animate-scale-in dark:border-slate-700">
-                            <div className="px-3 py-3 border-b mb-1 dark:border-slate-700">
-                                <p className="text-sm font-bold text-[#1a1f1c] dark:text-white">{user?.nombre}</p>
-                                <p className="text-xs text-muted-foreground dark:text-slate-400">{user?.email}</p>
+                        <div className="absolute right-0 top-full mt-2 w-56 rounded-2xl border bg-white dark:bg-[#22214d] p-2 shadow-xl animate-scale-in dark:border-[#292a69]">
+                            <div className="px-3 py-3 border-b mb-1 dark:border-[#292a69]">
+                                <p className="text-sm font-bold text-[#1a1f1c] dark:text-[#fdfdfd]">{user?.nombre}</p>
+                                <p className="text-xs text-muted-foreground dark:text-[#dddeff]">{user?.email}</p>
                             </div>
                             <button
                                 type="button"
                                 onClick={handleLogout}
-                                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors font-medium"
+                                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors font-medium"
                             >
                                 <LogOut className="h-4 w-4" />
                                 Cerrar sesión

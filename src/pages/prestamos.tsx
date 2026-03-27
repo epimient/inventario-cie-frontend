@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Plus, Undo2, Trash2, Search, Filter, AlertTriangle, Download, ArrowUpRight, ArrowDownLeft, RefreshCcw, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { Modal } from '@/components/ui/modal';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/toast';
 import { useAuth } from '@/contexts/auth-context';
+import { useSearch } from '@/contexts/search-context';
 import { usePrestamos } from '@/hooks/use-prestamos';
 import { usePrestatarios } from '@/hooks/use-prestatarios';
 import { useEquipos } from '@/hooks/use-equipos';
@@ -28,6 +29,8 @@ export default function PrestamosPage() {
     const { robots, isLoading: loadingRobots } = useRobotica();
     const { materiales, isLoading: loadingMateriales } = useMateriales();
 
+    const [searchParams, setSearchParams] = useSearchParams();
+    const { searchQuery, setSearchQuery } = useSearch();
     const [search, setSearch] = useState('');
     const [activeTab, setActiveTab] = useState('Todos');
     const [deleteModal, setDeleteModal] = useState<Prestamo | null>(null);
@@ -40,6 +43,28 @@ export default function PrestamosPage() {
     const canDelete = hasRole(['admin']);
 
     const isLoadingData = isLoading || loadingPrestatarios || loadingEquipos || loadingElectronica || loadingRobots || loadingMateriales;
+
+    // Sincronizar búsqueda global con búsqueda local
+    useEffect(() => {
+        const globalSearch = searchParams.get('search');
+        if (globalSearch) {
+            setSearch(globalSearch);
+            setSearchQuery(globalSearch);
+        }
+    }, [searchParams, setSearchQuery]);
+
+    const handleLocalSearch = (value: string) => {
+        setSearch(value);
+        setSearchQuery(value);
+        setCurrentPage(1);
+        const newParams = new URLSearchParams(searchParams);
+        if (value) {
+            newParams.set('search', value);
+        } else {
+            newParams.delete('search');
+        }
+        setSearchParams(newParams);
+    };
 
     if (isError) {
         return (
@@ -168,19 +193,19 @@ export default function PrestamosPage() {
             {/* Page Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="space-y-2">
-                    <h2 className="text-4xl font-extrabold text-[#2d3335] tracking-tighter leading-none">Préstamos</h2>
-                    <p className="text-[#5a6062] max-w-md">Gestiona los préstamos de equipos y materiales del inventario.</p>
+                    <h2 className="text-4xl font-extrabold text-[#2d3335] dark:text-[#fdfdfd] tracking-tighter leading-none">Préstamos</h2>
+                    <p className="text-[#5a6062] dark:text-[#dddeff] max-w-md">Gestiona los préstamos de equipos y materiales del inventario.</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <Button variant="outline" className="h-12 px-5 rounded-full gap-2 font-semibold">
+                    <Button variant="outline" className="h-12 px-5 rounded-full gap-2 font-semibold dark:bg-[#292a69] dark:text-[#fdfdfd] dark:hover:bg-[#3b438e]/50">
                         <Filter className="h-4 w-4" /> Filtros
                     </Button>
-                    <Button variant="outline" className="h-12 px-5 rounded-full gap-2 font-semibold">
+                    <Button variant="outline" className="h-12 px-5 rounded-full gap-2 font-semibold dark:bg-[#292a69] dark:text-[#fdfdfd] dark:hover:bg-[#3b438e]/50">
                         <Download className="h-4 w-4" /> Exportar
                     </Button>
                     {canEdit && (
                         <Link to="/prestamos/nuevo">
-                            <Button className="h-12 px-6 rounded-full gap-2 font-bold shadow-md">
+                            <Button className="h-12 px-6 rounded-full gap-2 font-bold shadow-md dark:bg-[#3b438e] dark:hover:bg-[#5a62b8]">
                                 <Plus className="h-4 w-4" /> Nuevo Préstamo
                             </Button>
                         </Link>
@@ -195,8 +220,8 @@ export default function PrestamosPage() {
                         key={tab}
                         onClick={() => { setActiveTab(tab); setCurrentPage(1); }}
                         className={`px-5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${activeTab === tab
-                            ? 'bg-[#4f645b] text-white'
-                            : 'bg-[#f1f4f5] text-[#5a6062] hover:bg-[#dee3e6]'
+                            ? 'bg-[#4f645b] dark:bg-[#3b438e] text-white'
+                            : 'bg-[#f1f4f5] dark:bg-[#292a69] text-[#5a6062] dark:text-[#dddeff] hover:bg-[#dee3e6] dark:hover:bg-[#3b438e]/70'
                         }`}
                     >
                         {tab}
@@ -211,56 +236,56 @@ export default function PrestamosPage() {
                     <input
                         placeholder="Buscar préstamo..."
                         value={search}
-                        onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-                        className="flex h-12 w-full rounded-2xl border border-transparent bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] pl-12 pr-4 text-sm placeholder:text-muted-foreground transition-all hover:border-gray-100 focus:outline-none focus:ring-2 focus:ring-[#E8F3EE] focus:border-[#4f645b]"
+                        onChange={(e) => handleLocalSearch(e.target.value)}
+                        className="flex h-12 w-full rounded-2xl border border-transparent bg-white dark:bg-[#292a69] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-black/30 pl-12 pr-4 text-sm dark:text-[#fdfdfd] placeholder:text-muted-foreground dark:placeholder:text-[#7b7b8b] transition-all hover:border-gray-100 focus:outline-none focus:ring-2 focus:ring-[#E8F3EE] dark:focus:ring-[#3b438e]/50 focus:border-[#4f645b] dark:focus:border-[#3b438e]"
                     />
                 </div>
             </div>
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-yellow-50 p-5 rounded-xl flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center">
-                        <ArrowUpRight className="h-5 w-5 text-yellow-600" />
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 p-5 rounded-xl flex items-center gap-4">
+                    <div className="h-10 w-10 rounded-full bg-yellow-100 dark:bg-yellow-900/40 flex items-center justify-center">
+                        <ArrowUpRight className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
                     </div>
                     <div>
-                        <p className="text-2xl font-black text-yellow-600">{prestamos.filter(p => p.estado === 'activo').length}</p>
-                        <p className="text-xs text-yellow-600/70 font-medium">Préstamos Activos</p>
+                        <p className="text-2xl font-black text-yellow-600 dark:text-yellow-400">{prestamos.filter(p => p.estado === 'activo').length}</p>
+                        <p className="text-xs text-yellow-600/70 dark:text-yellow-400/70 font-medium">Préstamos Activos</p>
                     </div>
                 </div>
-                <div className="bg-green-50 p-5 rounded-xl flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                        <RefreshCcw className="h-5 w-5 text-green-600" />
+                <div className="bg-green-50 dark:bg-green-900/20 p-5 rounded-xl flex items-center gap-4">
+                    <div className="h-10 w-10 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center">
+                        <RefreshCcw className="h-5 w-5 text-green-600 dark:text-green-400" />
                     </div>
                     <div>
-                        <p className="text-2xl font-black text-green-600">{prestamos.filter(p => p.estado === 'devuelto').length}</p>
-                        <p className="text-xs text-green-600/70 font-medium">Devoluciones Históricas</p>
+                        <p className="text-2xl font-black text-green-600 dark:text-green-400">{prestamos.filter(p => p.estado === 'devuelto').length}</p>
+                        <p className="text-xs text-green-600/70 dark:text-green-400/70 font-medium">Devoluciones Históricas</p>
                     </div>
                 </div>
-                <div className="bg-red-50 p-5 rounded-xl flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
-                        <AlertTriangle className="h-5 w-5 text-red-600" />
+                <div className="bg-red-50 dark:bg-red-900/20 p-5 rounded-xl flex items-center gap-4">
+                    <div className="h-10 w-10 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center">
+                        <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
                     </div>
                     <div>
-                        <p className="text-2xl font-black text-red-600">{prestamos.filter(p => p.estado === 'vencido').length}</p>
-                        <p className="text-xs text-red-600/70 font-medium">Préstamos Vencidos</p>
+                        <p className="text-2xl font-black text-red-600 dark:text-red-400">{prestamos.filter(p => p.estado === 'vencido').length}</p>
+                        <p className="text-xs text-red-600/70 dark:text-red-400/70 font-medium">Préstamos Vencidos</p>
                     </div>
                 </div>
             </div>
 
             {/* Main Table Card */}
-            <div className="bg-white rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100/50 overflow-hidden">
+            <div className="bg-white dark:bg-[#22214d] rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-black/40 border border-gray-100/50 dark:border-[#292a69]/50 overflow-hidden">
                 <Table columns={columns} data={paginatedData} loading={isLoadingData} emptyMessage="No hay préstamos registrados" />
 
                 {/* Pagination */}
                 {!isLoadingData && filtered.length > 0 && (
-                    <div className="px-8 py-5 border-t border-gray-50 flex items-center justify-between text-sm text-muted-foreground font-medium">
+                    <div className="px-8 py-5 border-t border-gray-50 dark:border-[#292a69] flex items-center justify-between text-sm text-muted-foreground dark:text-[#dddeff] font-medium">
                         <span>Mostrando {startIndex + 1} a {Math.min(endIndex, totalItems)} de {totalItems} registros</span>
                         <div className="flex items-center gap-2">
-                            <button 
+                            <button
                                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                 disabled={currentPage === 1}
-                                className="px-4 py-2 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-30"
+                                className="px-4 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-[#292a69] transition-colors disabled:opacity-30"
                             >
                                 <ArrowLeft className="h-4 w-4" />
                             </button>
@@ -271,18 +296,18 @@ export default function PrestamosPage() {
                                         key={page}
                                         onClick={() => setCurrentPage(page)}
                                         className={`px-4 py-2 rounded-xl font-bold transition-colors ${currentPage === page
-                                            ? 'bg-[#E8F3EE] text-[#4f645b]'
-                                            : 'hover:bg-gray-50'
+                                            ? 'bg-[#E8F3EE] dark:bg-[#3b438e] text-[#4f645b] dark:text-[#fdfdfd]'
+                                            : 'hover:bg-gray-50 dark:hover:bg-[#292a69]'
                                         }`}
                                     >
                                         {page}
                                     </button>
                                 );
                             })}
-                            <button 
+                            <button
                                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                 disabled={currentPage === totalPages}
-                                className="px-4 py-2 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-30"
+                                className="px-4 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-[#292a69] transition-colors disabled:opacity-30"
                             >
                                 <ArrowLeft className="h-4 w-4 rotate-180" />
                             </button>
@@ -294,7 +319,7 @@ export default function PrestamosPage() {
             {/* Delete confirmation */}
             <Modal open={!!deleteModal} onClose={() => setDeleteModal(null)} title="Confirmar eliminación">
                 <div className="pt-2">
-                    <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+                    <p className="text-sm text-muted-foreground dark:text-[#7b7b8b] mb-6 leading-relaxed">
                         ¿Estás seguro de eliminar el registro de préstamo #{deleteModal?.id}? Esta acción no se puede deshacer.
                     </p>
                     <div className="flex justify-end gap-3">

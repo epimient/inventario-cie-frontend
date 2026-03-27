@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Plus, Undo2, Trash2, Search, Filter, AlertTriangle, Monitor, Keyboard, Server, Armchair, Pencil, Download, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { Modal } from '@/components/ui/modal';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/toast';
 import { useAuth } from '@/contexts/auth-context';
+import { useSearch } from '@/contexts/search-context';
 import { useEquipos } from '@/hooks/use-equipos';
 import { formatDate } from '@/utils/formatters';
 import { getErrorMessage } from '@/utils/error-handler';
@@ -46,7 +47,8 @@ const getIcon = (nombre: string) => {
 
 export default function EquiposPage() {
     const { equipos, isLoading, isError, error, createEquipo, updateEquipo, deleteEquipo, isCreating, isUpdating } = useEquipos();
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const { searchQuery, setSearchQuery } = useSearch();
     const [search, setSearch] = useState('');
     const [activeTab, setActiveTab] = useState('Todos');
     const [modalOpen, setModalOpen] = useState(searchParams.get('new') === 'true');
@@ -61,6 +63,29 @@ export default function EquiposPage() {
     const { hasRole } = useAuth();
     const canEdit = hasRole(['admin', 'inventory']);
     const canDelete = hasRole(['admin']);
+
+    // Sincronizar búsqueda global con búsqueda local
+    useEffect(() => {
+        const globalSearch = searchParams.get('search');
+        if (globalSearch) {
+            setSearch(globalSearch);
+            setSearchQuery(globalSearch);
+        }
+    }, [searchParams, setSearchQuery]);
+
+    const handleLocalSearch = (value: string) => {
+        setSearch(value);
+        setSearchQuery(value);
+        setCurrentPage(1);
+        // Actualizar URL sin recargar
+        const newParams = new URLSearchParams(searchParams);
+        if (value) {
+            newParams.set('search', value);
+        } else {
+            newParams.delete('search');
+        }
+        setSearchParams(newParams);
+    };
 
     if (isError) {
         return (
@@ -221,15 +246,15 @@ export default function EquiposPage() {
             {/* Page Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="space-y-2">
-                    <h2 className="text-4xl font-extrabold text-[#2d3335] tracking-tighter leading-none">Inventario General</h2>
-                    <p className="text-[#5a6062] max-w-md">Gestiona y monitorea el estado actual de todos los activos tecnológicos de la organización.</p>
+                    <h2 className="text-4xl font-extrabold text-[#2d3335] dark:text-[#fdfdfd] tracking-tighter leading-none">Inventario General</h2>
+                    <p className="text-[#5a6062] dark:text-[#dddeff] max-w-md">Gestiona y monitorea el estado actual de todos los activos tecnológicos de la organización.</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <Button variant="outline" className="h-12 px-5 rounded-full gap-2 font-semibold">
+                    <Button variant="outline" className="h-12 px-5 rounded-full gap-2 font-semibold dark:bg-[#292a69] dark:text-[#fdfdfd] dark:hover:bg-[#3b438e]/50">
                         <Filter className="h-4 w-4" /> Filtros Avanzados
                     </Button>
                     {canEdit && (
-                        <Button onClick={openCreate} className="h-12 px-6 rounded-full gap-2 font-bold shadow-md">
+                        <Button onClick={openCreate} className="h-12 px-6 rounded-full gap-2 font-bold shadow-md dark:bg-[#3b438e] dark:hover:bg-[#5a62b8]">
                             <Plus className="h-4 w-4" /> Nuevo Equipo
                         </Button>
                     )}
@@ -243,8 +268,8 @@ export default function EquiposPage() {
                         key={tab}
                         onClick={() => setActiveTab(tab)}
                         className={`px-5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${activeTab === tab
-                            ? 'bg-[#4f645b] text-white'
-                            : 'bg-[#f1f4f5] text-[#5a6062] hover:bg-[#dee3e6]'
+                            ? 'bg-[#4f645b] dark:bg-[#3b438e] text-white'
+                            : 'bg-[#f1f4f5] dark:bg-[#292a69] text-[#5a6062] dark:text-[#dddeff] hover:bg-[#dee3e6] dark:hover:bg-[#3b438e]/70'
                         }`}
                     >
                         {tab}
@@ -259,30 +284,30 @@ export default function EquiposPage() {
                     <input
                         placeholder="Buscar equipo..."
                         value={search}
-                        onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-                        className="flex h-12 w-full rounded-2xl border border-transparent bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] pl-12 pr-4 text-sm placeholder:text-muted-foreground transition-all hover:border-gray-100 focus:outline-none focus:ring-2 focus:ring-[#E8F3EE] focus:border-[#4f645b]"
+                        onChange={(e) => handleLocalSearch(e.target.value)}
+                        className="flex h-12 w-full rounded-2xl border border-transparent bg-white dark:bg-[#292a69] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-black/30 pl-12 pr-4 text-sm dark:text-[#fdfdfd] placeholder:text-muted-foreground dark:placeholder:text-[#7b7b8b] transition-all hover:border-gray-100 focus:outline-none focus:ring-2 focus:ring-[#E8F3EE] dark:focus:ring-[#3b438e]/50 focus:border-[#4f645b] dark:focus:border-[#3b438e]"
                     />
                 </div>
                 <div className="flex items-center gap-3">
-                    <Button variant="outline" className="h-12 px-5 rounded-full gap-2 font-semibold">
+                    <Button variant="outline" className="h-12 px-5 rounded-full gap-2 font-semibold dark:bg-[#292a69] dark:text-[#fdfdfd] dark:hover:bg-[#3b438e]/50">
                         <Download className="h-4 w-4" /> Exportar
                     </Button>
                 </div>
             </div>
 
             {/* Main Table Card */}
-            <div className="bg-white rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100/50 overflow-hidden">
+            <div className="bg-white dark:bg-[#22214d] rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-black/40 border border-gray-100/50 dark:border-[#292a69]/50 overflow-hidden">
                 <Table columns={columns} data={paginatedData} loading={isLoading} emptyMessage="No se encontraron equipos" />
 
                 {/* Pagination */}
                 {!isLoading && filtered.length > 0 && (
-                    <div className="px-8 py-5 border-t border-gray-50 flex items-center justify-between text-sm text-muted-foreground font-medium">
+                    <div className="px-8 py-5 border-t border-gray-50 dark:border-[#292a69] flex items-center justify-between text-sm text-muted-foreground dark:text-[#dddeff] font-medium">
                         <span>Mostrando {startIndex + 1} a {Math.min(endIndex, totalItems)} de {totalItems} equipos</span>
                         <div className="flex items-center gap-2">
-                            <button 
+                            <button
                                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                 disabled={currentPage === 1}
-                                className="px-4 py-2 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-30"
+                                className="px-4 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-[#292a69] transition-colors disabled:opacity-30"
                             >
                                 <ArrowLeft className="h-4 w-4" />
                             </button>
@@ -293,18 +318,18 @@ export default function EquiposPage() {
                                         key={page}
                                         onClick={() => setCurrentPage(page)}
                                         className={`px-4 py-2 rounded-xl font-bold transition-colors ${currentPage === page
-                                            ? 'bg-[#E8F3EE] text-[#4f645b]'
-                                            : 'hover:bg-gray-50'
+                                            ? 'bg-[#E8F3EE] dark:bg-[#3b438e] text-[#4f645b] dark:text-[#fdfdfd]'
+                                            : 'hover:bg-gray-50 dark:hover:bg-[#292a69]'
                                         }`}
                                     >
                                         {page}
                                     </button>
                                 );
                             })}
-                            <button 
+                            <button
                                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                 disabled={currentPage === totalPages}
-                                className="px-4 py-2 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-30"
+                                className="px-4 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-[#292a69] transition-colors disabled:opacity-30"
                             >
                                 <ArrowLeft className="h-4 w-4 rotate-180" />
                             </button>

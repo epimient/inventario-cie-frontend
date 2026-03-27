@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Plus, Pencil, Trash2, Search, AlertTriangle, Download, Filter, ArrowLeft, Cpu, Zap, Cable, Forward } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Modal } from '@/components/ui/modal';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/toast';
 import { useAuth } from '@/contexts/auth-context';
+import { useSearch } from '@/contexts/search-context';
 import { useElectronica } from '@/hooks/use-electronica';
 import { Spinner } from '@/components/ui/spinner';
 import type { Electronica, ElectronicaCreate } from '@/types';
@@ -26,7 +27,8 @@ const getIcon = (nombre: string) => {
 
 export default function ElectronicaPage() {
     const { electronica, isLoading, isError, error, createElectronica, updateElectronica, deleteElectronica, isCreating, isUpdating } = useElectronica();
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const { searchQuery, setSearchQuery } = useSearch();
     const [search, setSearch] = useState('');
     const [activeTab, setActiveTab] = useState('Todos');
     const [modalOpen, setModalOpen] = useState(searchParams.get('new') === 'true');
@@ -41,6 +43,28 @@ export default function ElectronicaPage() {
     const { hasRole } = useAuth();
     const canEdit = hasRole(['admin', 'inventory']);
     const canDelete = hasRole(['admin']);
+
+    // Sincronizar búsqueda global con búsqueda local
+    useEffect(() => {
+        const globalSearch = searchParams.get('search');
+        if (globalSearch) {
+            setSearch(globalSearch);
+            setSearchQuery(globalSearch);
+        }
+    }, [searchParams, setSearchQuery]);
+
+    const handleLocalSearch = (value: string) => {
+        setSearch(value);
+        setSearchQuery(value);
+        setCurrentPage(1);
+        const newParams = new URLSearchParams(searchParams);
+        if (value) {
+            newParams.set('search', value);
+        } else {
+            newParams.delete('search');
+        }
+        setSearchParams(newParams);
+    };
 
     if (isError) {
         return (
@@ -166,15 +190,15 @@ export default function ElectronicaPage() {
         <div className="space-y-6 animate-fade-in pb-8">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="space-y-2">
-                    <h2 className="text-4xl font-extrabold text-[#2d3335] tracking-tighter leading-none">Electrónica</h2>
-                    <p className="text-[#5a6062] max-w-md">Gestiona todos los componentes electrónicos del inventario.</p>
+                    <h2 className="text-4xl font-extrabold text-[#2d3335] dark:text-[#fdfdfd] tracking-tighter leading-none">Electrónica</h2>
+                    <p className="text-[#5a6062] dark:text-[#dddeff] max-w-md">Gestiona todos los componentes electrónicos del inventario.</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <Button variant="outline" className="h-12 px-5 rounded-full gap-2 font-semibold">
+                    <Button variant="outline" className="h-12 px-5 rounded-full gap-2 font-semibold dark:bg-[#292a69] dark:text-[#fdfdfd] dark:hover:bg-[#3b438e]/50">
                         <Filter className="h-4 w-4" /> Filtros
                     </Button>
                     {canEdit && (
-                        <Button onClick={openCreate} className="h-12 px-6 rounded-full gap-2 font-bold shadow-md">
+                        <Button onClick={openCreate} className="h-12 px-6 rounded-full gap-2 font-bold shadow-md dark:bg-[#3b438e] dark:hover:bg-[#5a62b8]">
                             <Plus className="h-4 w-4" /> Nuevo Item
                         </Button>
                     )}
@@ -187,8 +211,8 @@ export default function ElectronicaPage() {
                         key={tab}
                         onClick={() => setActiveTab(tab)}
                         className={`px-5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${activeTab === tab
-                            ? 'bg-[#486277] text-white'
-                            : 'bg-[#f1f4f5] text-[#5a6062] hover:bg-[#dee3e6]'
+                            ? 'bg-[#486277] dark:bg-[#5a62b8] text-white'
+                            : 'bg-[#f1f4f5] dark:bg-[#292a69] text-[#5a6062] dark:text-[#dddeff] hover:bg-[#dee3e6] dark:hover:bg-[#3b438e]/70'
                         }`}
                     >
                         {tab}
@@ -202,28 +226,28 @@ export default function ElectronicaPage() {
                     <input
                         placeholder="Buscar electrónica..."
                         value={search}
-                        onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-                        className="flex h-12 w-full rounded-2xl border border-transparent bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] pl-12 pr-4 text-sm placeholder:text-muted-foreground transition-all hover:border-gray-100 focus:outline-none focus:ring-2 focus:ring-[#cae6fe] focus:border-[#486277]"
+                        onChange={(e) => handleLocalSearch(e.target.value)}
+                        className="flex h-12 w-full rounded-2xl border border-transparent bg-white dark:bg-[#292a69] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-black/30 pl-12 pr-4 text-sm dark:text-[#fdfdfd] placeholder:text-muted-foreground dark:placeholder:text-[#7b7b8b] transition-all hover:border-gray-100 focus:outline-none focus:ring-2 focus:ring-[#cae6fe] dark:focus:ring-[#3b438e]/50 focus:border-[#486277] dark:focus:border-[#3b438e]"
                     />
                 </div>
             </div>
 
-            <div className="bg-white rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100/50 overflow-hidden">
+            <div className="bg-white dark:bg-[#22214d] rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-black/40 border border-gray-100/50 dark:border-[#292a69]/50 overflow-hidden">
                 <Table columns={columns} data={paginatedData} loading={isLoading} emptyMessage="No se encontraron items" />
 
                 {!isLoading && filtered.length > 0 && (
-                    <div className="px-8 py-5 border-t border-gray-50 flex items-center justify-between text-sm text-muted-foreground font-medium">
+                    <div className="px-8 py-5 border-t border-gray-50 dark:border-[#292a69] flex items-center justify-between text-sm text-muted-foreground dark:text-[#dddeff] font-medium">
                         <span>Mostrando {startIndex + 1} a {Math.min(endIndex, totalItems)} de {totalItems} registros</span>
                         <div className="flex items-center gap-2">
-                            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-4 py-2 rounded-xl hover:bg-gray-50 disabled:opacity-30">
+                            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-4 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-[#292a69] disabled:opacity-30">
                                 <ArrowLeft className="h-4 w-4" />
                             </button>
                             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => (
-                                <button key={i} onClick={() => setCurrentPage(i + 1)} className={`px-4 py-2 rounded-xl font-bold ${currentPage === i + 1 ? 'bg-[#cae6fe] text-[#486277]' : 'hover:bg-gray-50'}`}>
+                                <button key={i} onClick={() => setCurrentPage(i + 1)} className={`px-4 py-2 rounded-xl font-bold ${currentPage === i + 1 ? 'bg-[#cae6fe] dark:bg-[#3b438e] text-[#486277] dark:text-[#fdfdfd]' : 'hover:bg-gray-50 dark:hover:bg-[#292a69]'}`}>
                                     {i + 1}
                                 </button>
                             ))}
-                            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-4 py-2 rounded-xl hover:bg-gray-50 disabled:opacity-30">
+                            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-4 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-[#292a69] disabled:opacity-30">
                                 <ArrowLeft className="h-4 w-4 rotate-180" />
                             </button>
                         </div>

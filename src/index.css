@@ -1,100 +1,132 @@
+
 @import "tailwindcss/base";
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 160 10% 18%;
-    --card: 0 0% 100%;
-    --card-foreground: 160 10% 18%;
-    --primary: 153 32% 25%;
-    --primary-foreground: 0 0% 100%;
-    --primary-container: 150 30% 85%;
-    --primary-dim: 153 28% 22%;
-    --primary-fixed: 150 30% 85%;
-    --primary-fixed-dim: 150 28% 78%;
-    --secondary: 205 30% 42%;
-    --secondary-foreground: 0 0% 100%;
-    --secondary-container: 204 80% 90%;
-    --secondary-dim: 205 28% 38%;
-    --secondary-fixed: 204 80% 90%;
-    --secondary-fixed-dim: 204 80% 80%;
-    --tertiary: 205 25% 38%;
-    --tertiary-foreground: 214 80% 97%;
-    --tertiary-container: 204 80% 94%;
-    --tertiary-dim: 205 23% 32%;
-    --tertiary-fixed: 204 80% 94%;
-    --tertiary-fixed-dim: 204 80% 85%;
-    --muted: 210 20% 96%;
-    --muted-foreground: 160 5% 45%;
-    --accent: 150 20% 94%;
-    --accent-foreground: 153 32% 25%;
-    --destructive: 0 63% 41%;
-    --destructive-foreground: 0 0% 100%;
-    --success: 142 60% 45%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 160 10% 15%;
-    --border: 210 20% 90%;
-    --input: 210 20% 90%;
-    --ring: 153 32% 25%;
-    --radius: 1rem;
-    --error-container: 0 63% 90%;
-    --on-error: 0 0% 100%;
-    --on-error-container: 0 75% 44%;
+    --on-background: 45 51 53;
+    --on-secondary: 245 249 255;
+    --surface-container-high: 229 233 235;
+    --surface-container-highest: 222 227 230;
+    --primary: 79 100 91;
+    --on-secondary-container: 58 85 105;
+    --secondary-dim: 60 86 106;
+    --inverse-surface: 12 15 16;
+    --secondary-container: 202 230 254;
+    --outline: 118 124 126;
+    --on-tertiary-container: 73 88 103;
+    --on-primary: 231 254 243;
+    --on-error: 255 247 246;
+    --surface: 248 249 250;
+    --on-primary-fixed: 47 67 60;
+    --on-surface-variant: 90 96 98;
+    --on-secondary-fixed-variant: 68 94 115;
+    --primary-container: 209 232 221;
+    --on-surface: 45 51 53;
+    --surface-dim: 213 219 221;
+    --tertiary-container: 220 237 255;
+    --tertiary: 81 97 112;
+    --surface-container-low: 241 244 245;
+    --surface-variant: 222 227 230;
+    --on-primary-container: 66 86 78;
+    --background: 248 249 250;
+    --surface-container-lowest: 255 255 255;
+    --error-container: 250 116 111;
+    --on-secondary-fixed: 39 66 85;
+    --secondary: 72 98 119;
+    --on-tertiary: 246 249 255;
+    --error: 168 56 54;
+    --surface-bright: 248 249 250;
+    --secondary-fixed: 202 230 254;
+    --primary-fixed: 209 232 221;
+    --secondary-fixed-dim: 188 216 240;
+    --on-tertiary-fixed: 55 70 85;
+    --inverse-on-surface: 155 157 158;
+    --tertiary-fixed: 220 237 255;
+    --primary-dim: 67 87 79;
+    --error-dim: 103 4 13;
+    --outline-variant: 173 179 181;
+    --inverse-primary: 231 255 243;
+    --surface-container: 235 238 240;
+    --on-error-container: 110 10 18;
+    --primary-fixed-dim: 195 218 207;
+    --surface-tint: 79 100 91;
+    --on-tertiary-fixed-variant: 83 99 114;
+    --tertiary-dim: 69 85 100;
+    --on-primary-fixed-variant: 75 96 87;
+    --tertiary-fixed-dim: 206 223 241;
   }
 
   .dark {
-    --background: 150 25% 5%;
-    --foreground: 150 15% 92%;
-    --card: 150 25% 11%;
-    --card-foreground: 150 15% 92%;
-    --primary: 153 28% 25%;
-    --primary-foreground: 0 0% 100%;
-    --primary-container: 150 25% 15%;
-    --primary-dim: 153 25% 30%;
-    --primary-fixed: 150 25% 18%;
-    --primary-fixed-dim: 150 23% 15%;
-    --secondary: 150 20% 20%;
-    --secondary-foreground: 150 15% 92%;
-    --secondary-container: 150 20% 15%;
-    --secondary-dim: 150 18% 25%;
-    --secondary-fixed: 150 20% 18%;
-    --secondary-fixed-dim: 150 18% 12%;
-    --tertiary: 150 20% 22%;
-    --tertiary-foreground: 150 15% 92%;
-    --tertiary-container: 150 20% 15%;
-    --tertiary-dim: 150 18% 20%;
-    --tertiary-fixed: 150 20% 18%;
-    --tertiary-fixed-dim: 150 18% 12%;
-    --muted: 150 25% 8%;
-    --muted-foreground: 150 10% 62%;
-    --accent: 153 28% 25%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 63% 40%;
-    --destructive-foreground: 0 0% 100%;
-    --success: 142 60% 45%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 150 10% 15%;
-    --border: 150 20% 18%;
-    --input: 150 20% 18%;
-    --ring: 153 28% 25%;
-    --radius: 1rem;
-    --error-container: 0 63% 25%;
-    --on-error: 0 0% 100%;
-    --on-error-container: 0 75% 44%;
-  }
-}
+    /* Paleta extraída de mockups/dark.png - Colores exactos */
+    --background: 19 21 45;          /* #13152d - Fondo Principal */
+    --surface: 34 33 77;              /* #22214d - Superficies y Paneles */
+    --surface-dim: 19 21 45;
+    --surface-bright: 41 42 105;
+    --surface-container-lowest: 34 33 77;
+    --surface-container-low: 41 42 105;
+    --surface-container: 41 42 105;
+    --surface-container-high: 41 42 105;
+    --surface-container-highest: 41 42 105;  /* #292a69 - Superficies Activas */
+    --surface-variant: 34 33 77;
+    --surface-tint: 59 67 142;
 
-@layer base {
+    --primary: 59 67 142;             /* #3b438e - Acento Primario Índigo */
+    --primary-dim: 59 67 142;
+    --primary-container: 59 67 142;
+    --primary-fixed: 59 67 142;
+    --primary-fixed-dim: 59 67 142;
+    --on-primary: 253 253 253;        /* #fdfdfd - Texto sobre primario */
+    --on-primary-container: 221 222 255;
+    --on-primary-fixed: 253 253 253;
+    --on-primary-fixed-variant: 253 253 253;
+
+    --secondary: 41 42 105;
+    --secondary-dim: 41 42 105;
+    --secondary-container: 41 42 105;
+    --secondary-fixed: 41 42 105;
+    --secondary-fixed-dim: 41 42 105;
+    --on-secondary: 253 253 253;      /* #fdfdfd - Texto principal */
+    --on-secondary-container: 253 253 253;
+    --on-secondary-fixed: 253 253 253;
+    --on-secondary-fixed-variant: 253 253 253;
+
+    --tertiary: 64 65 142;
+    --tertiary-container: 64 65 142;
+    --tertiary-fixed: 64 65 142;
+    --tertiary-fixed-dim: 64 65 142;
+    --tertiary-dim: 64 65 142;
+    --on-tertiary: 253 253 253;
+    --on-tertiary-container: 253 253 253;
+    --on-tertiary-fixed: 253 253 253;
+    --on-tertiary-fixed-variant: 253 253 253;
+
+    --error: 229 63 103;              /* #e53f67 - Alertas/Rojo Carmesí */
+    --error-container: 229 63 103;
+    --error-dim: 229 63 103;
+    --on-error: 253 253 253;
+    --on-error-container: 253 253 253;
+
+    --on-surface: 253 253 253;        /* #fdfdfd - Texto principal */
+    --on-surface-variant: 221 222 255; /* #dddeff - Texto secundario azul claro */
+    --inverse-surface: 34 33 77;
+    --inverse-on-surface: 253 253 253;
+    --inverse-primary: 59 67 142;
+
+    --on-background: 253 253 253;     /* #fdfdfd - Texto sobre fondo */
+
+    --outline: 134 135 171;
+    --outline-variant: 134 135 171;
+    --shadow: 0 0 0;
+  }
+  
   * {
-    @apply border-border;
+    @apply border-outline-variant;
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background text-on-surface font-sans antialiased;
   }
 
   /* Custom scrollbar */
@@ -102,138 +134,33 @@
     width: 6px;
     height: 6px;
   }
-
   ::-webkit-scrollbar-track {
     @apply bg-transparent;
   }
-
   ::-webkit-scrollbar-thumb {
-    @apply bg-muted-foreground/20 rounded-full;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-muted-foreground/40;
+    @apply bg-outline-variant/40 rounded-full;
   }
 }
 
 @layer utilities {
-  .glass {
-    @apply bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10;
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
   }
-
+  .dark .glass-panel {
+    background: rgba(34, 33, 77, 0.4);
+  }
+  
   .glass-card {
-    @apply bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/30 dark:border-white/10 shadow-lg shadow-black/5 dark:shadow-black/20;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+  }
+  .dark .glass-card {
+    background: rgba(34, 33, 77, 0.7);
   }
 
-  /* Material Symbols Outlined */
   .material-symbols-outlined {
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-  }
-
-  /* Print Styles */
-  @media print {
-    /* Ocultar elementos no necesarios */
-    .no-print,
-    .sidebar,
-    .header,
-    button,
-    a[href],
-    nav,
-    footer {
-      display: none !important;
-    }
-
-    /* Resetear márgenes y paddings */
-    * {
-      margin: 0 !important;
-      padding: 0 !important;
-      box-shadow: none !important;
-      text-shadow: none !important;
-    }
-
-    /* Fondos blancos para impresión */
-    body,
-    .bg-card,
-    .bg-white,
-    .glass-card,
-    section,
-    div {
-      background: white !important;
-      background-color: white !important;
-    }
-
-    /* Texto negro para impresión */
-    body,
-    p,
-    h1, h2, h3, h4, h5, h6,
-    span,
-    td, th,
-    .text-foreground,
-    .text-\[\#2d3335\],
-    .text-\[\#5a6062\] {
-      color: black !important;
-    }
-
-    /* Imágenes responsivas */
-    img {
-      max-width: 100% !important;
-      height: auto !important;
-      page-break-inside: avoid;
-    }
-
-    /* Tablas para impresión */
-    table {
-      width: 100% !important;
-      border-collapse: collapse !important;
-    }
-
-    td, th {
-      border: 1px solid #ddd !important;
-      padding: 8px !important;
-    }
-
-    /* Evitar saltos de página dentro de tablas */
-    tr, td {
-      page-break-inside: avoid;
-    }
-
-    /* Encabezados de tabla en cada página */
-    thead {
-      display: table-header-group;
-    }
-
-    /* Títulos de secciones */
-    h1, h2, h3, h4, h5, h6 {
-      page-break-after: avoid;
-    }
-
-    /* Ocultar elementos interactivos */
-    input,
-    select,
-    textarea,
-    .btn,
-    .button {
-      border: none !important;
-    }
-
-    /* Mostrar solo contenido principal */
-    main,
-    .content,
-    .main-content {
-      width: 100% !important;
-      margin: 0 !important;
-      padding: 0 !important;
-    }
-
-    /* Ocultar scrollbar en impresión */
-    ::-webkit-scrollbar {
-      display: none !important;
-    }
-
-    /* Configuración de página */
-    @page {
-      size: A4;
-      margin: 1cm;
-    }
   }
 }

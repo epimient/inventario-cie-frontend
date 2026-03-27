@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/contexts/auth-context';
 import { ThemeProvider } from '@/contexts/theme-context';
+import { SearchProvider } from '@/contexts/search-context';
 import { ToastProvider } from '@/components/ui/toast';
 import { Layout } from '@/components/layout/layout';
 import { ProtectedRoute } from '@/components/layout/protected-route';
@@ -42,37 +43,39 @@ function App() {
             <QueryClientProvider client={queryClient}>
                 <ThemeProvider>
                     <AuthProvider>
-                        <ToastProvider>
-                            <Router>
-                            <Routes>
-                                <Route path="/login" element={<Login />} />
-                                <Route path="/registro" element={<Registro />} />
-                                <Route path="/auth/callback" element={<AuthCallback />} />
+                        <SearchProvider>
+                            <ToastProvider>
+                                <Router>
+                                    <Routes>
+                                        <Route path="/login" element={<Login />} />
+                                        <Route path="/registro" element={<Registro />} />
+                                        <Route path="/auth/callback" element={<AuthCallback />} />
 
-                                <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-                                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                                    <Route path="/dashboard" element={<Dashboard />} />
-                                    <Route path="/equipos" element={<Equipos />} />
-                                    <Route path="/electronica" element={<Electronica />} />
-                                    <Route path="/robotica" element={<Robotica />} />
-                                    <Route path="/materiales" element={<Materiales />} />
-                                    <Route path="/prestamos" element={<Prestamos />} />
-                                    <Route path="/prestamos/nuevo" element={<NuevoPrestamo />} />
-                                    <Route path="/prestatarios" element={<Prestatarios />} />
-                                    <Route path="/movimientos" element={<Movimientos />} />
-                                    <Route path="/danados" element={<Danados />} />
-                                    <Route path="/reportes" element={<Reportes />} />
-                                    <Route path="/configuracion" element={<Configuracion />} />
-                                    <Route path="/notificaciones" element={<Notificaciones />} />
-                                    {/* Fallback */}
-                                    <Route path="*" element={<Navigate to="/dashboard" replace />} />
-                                </Route>
-                            </Routes>
-                        </Router>
-                    </ToastProvider>
-                </AuthProvider>
-            </ThemeProvider>
-        </QueryClientProvider>
+                                        <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+                                            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                                            <Route path="/dashboard" element={<Dashboard />} />
+                                            <Route path="/equipos" element={<Equipos />} />
+                                            <Route path="/electronica" element={<Electronica />} />
+                                            <Route path="/robotica" element={<Robotica />} />
+                                            <Route path="/materiales" element={<Materiales />} />
+                                            <Route path="/prestamos" element={<Prestamos />} />
+                                            <Route path="/prestamos/nuevo" element={<NuevoPrestamo />} />
+                                            <Route path="/prestatarios" element={<Prestatarios />} />
+                                            <Route path="/movimientos" element={<Movimientos />} />
+                                            <Route path="/danados" element={<Danados />} />
+                                            <Route path="/reportes" element={<Reportes />} />
+                                            <Route path="/configuracion" element={<Configuracion />} />
+                                            <Route path="/notificaciones" element={<Notificaciones />} />
+                                            {/* Fallback */}
+                                            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                                        </Route>
+                                    </Routes>
+                                </Router>
+                            </ToastProvider>
+                        </SearchProvider>
+                    </AuthProvider>
+                </ThemeProvider>
+            </QueryClientProvider>
         </ErrorBoundary>
     );
 }
