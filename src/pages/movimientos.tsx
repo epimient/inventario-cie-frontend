@@ -69,17 +69,17 @@ export default function MovimientosPage() {
             header: 'Tipo de Mov.',
             render: (m: Movimiento) => (
                 <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100">
+                    <div className="h-8 w-8 rounded-full bg-gray-50 dark:bg-[#292a69] flex items-center justify-center border border-gray-100 dark:border-[#3b438e]">
                         {tipoIcons[m.tipo]}
                     </div>
-                    <span className="capitalize font-semibold text-[#1a1f1c]">{m.tipo.replace('_', ' ')}</span>
+                    <span className="capitalize font-semibold text-[#1a1f1c] dark:text-[#fdfdfd]">{m.tipo.replace('_', ' ')}</span>
                 </div>
             )
         },
-        { key: 'item', header: 'Ítem Afectado', render: (m: Movimiento) => <span className="font-medium">{getItemName(m)}</span> },
-        { key: 'descripcion', header: 'Descripción', className: 'max-w-xs truncate text-muted-foreground' },
+        { key: 'item', header: 'Ítem Afectado', render: (m: Movimiento) => <span className="font-medium dark:text-[#dddeff]">{getItemName(m)}</span> },
+        { key: 'descripcion', header: 'Descripción', className: 'max-w-xs truncate text-muted-foreground dark:text-[#7b7b8b]' },
         { key: 'cantidad', header: 'Cantidad', className: 'text-center', render: (m: Movimiento) => <Badge variant={m.cantidad > 0 ? 'success' : 'secondary'}>{m.cantidad > 0 ? `+${m.cantidad}` : m.cantidad}</Badge> },
-        { key: 'fecha', header: 'Fecha', className: 'text-muted-foreground', render: (m: Movimiento) => formatDate(m.created_at) },
+        { key: 'fecha', header: 'Fecha', className: 'text-muted-foreground dark:text-[#7b7b8b]', render: (m: Movimiento) => formatDate(m.created_at) },
     ];
 
     return (
@@ -92,22 +92,22 @@ export default function MovimientosPage() {
                         placeholder="Filtrar historial de movimientos..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="flex h-12 w-full rounded-2xl border border-transparent bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] pl-12 pr-4 text-sm placeholder:text-muted-foreground transition-all hover:border-gray-100 focus:outline-none focus:ring-2 focus:ring-[#E8F3EE] focus:border-[#415A52]"
+                        className="flex h-12 w-full rounded-2xl border border-transparent bg-white dark:bg-[#292a69] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-black/30 pl-12 pr-4 text-sm dark:text-[#fdfdfd] placeholder:text-muted-foreground dark:placeholder:text-[#7b7b8b] transition-all hover:border-gray-100 focus:outline-none focus:ring-2 focus:ring-[#E8F3EE] dark:focus:ring-[#3b438e]/50 focus:border-[#4f645b] dark:focus:border-[#3b438e]"
                     />
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <button className="h-12 px-5 rounded-2xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] text-[#1a1f1c] font-semibold text-sm flex items-center gap-2 hover:bg-gray-50 transition-colors">
+                    <button className="h-12 px-5 rounded-2xl bg-white dark:bg-[#292a69] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-black/30 text-[#1a1f1c] dark:text-[#fdfdfd] font-semibold text-sm flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-[#3b438e]/50 transition-colors">
                         <Filter className="h-4 w-4" /> Filter
                     </button>
-                    <button className="h-12 px-5 rounded-2xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] text-[#1a1f1c] font-semibold text-sm flex items-center gap-2 hover:bg-gray-50 transition-colors">
+                    <button className="h-12 px-5 rounded-2xl bg-white dark:bg-[#292a69] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-black/30 text-[#1a1f1c] dark:text-[#fdfdfd] font-semibold text-sm flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-[#3b438e]/50 transition-colors">
                         <Download className="h-4 w-4" /> Export CSV
                     </button>
                 </div>
             </div>
 
             {/* Main Table Card */}
-            <div className="bg-white rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100/50 overflow-hidden">
+            <div className="bg-white dark:bg-[#22214d] rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-black/40 border border-gray-100/50 dark:border-[#292a69]/50 overflow-hidden">
                 <Table columns={columns} data={filtered} loading={isLoading} emptyMessage="No se registran movimientos" />
             </div>
         </div>

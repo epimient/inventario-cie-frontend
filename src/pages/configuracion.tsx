@@ -83,26 +83,26 @@ export default function ConfiguracionPage() {
     if (isError) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-                <AlertTriangle className="h-12 w-12 text-red-500" />
+                <AlertTriangle className="h-12 w-12 text-red-500 dark:text-red-400" />
                 <div className="text-center space-y-2">
-                    <h3 className="font-semibold">Error al cargar la configuración</h3>
-                    <p className="text-sm text-muted-foreground">{error?.message || 'Revisa tu conexión'}</p>
+                    <h3 className="font-semibold text-[#2d3335] dark:text-[#fdfdfd]">Error al cargar la configuración</h3>
+                    <p className="text-sm text-muted-foreground dark:text-[#7b7b8b]">{error?.message || 'Revisa tu conexión'}</p>
                 </div>
-                <Button variant="outline" onClick={() => window.location.reload()}>Reintentar</Button>
+                <Button variant="outline" onClick={() => window.location.reload()} className="dark:bg-[#292a69] dark:text-[#fdfdfd] dark:hover:bg-[#3b438e]/50">Reintentar</Button>
             </div>
         );
     }
 
     return (
         <div className="animate-fade-in">
-            <Modal 
-                open={modalOpen} 
+            <Modal
+                open={modalOpen}
                 onClose={() => setModalOpen(false)}
                 title="Configuración del Sistema"
                 className="max-w-3xl"
             >
                 <div className="pt-2 pb-4">
-                    <p className="text-sm text-muted-foreground mb-6">
+                    <p className="text-sm text-muted-foreground dark:text-[#7b7b8b] mb-6">
                         Configura los umbrales y límites del sistema. Los cambios se guardan automáticamente al hacer clic en Guardar.
                     </p>
 
@@ -111,22 +111,22 @@ export default function ConfiguracionPage() {
                             <Spinner size="lg" />
                         </div>
                     ) : configuraciones.length === 0 ? (
-                        <div className="text-center p-8 border border-dashed rounded-xl text-muted-foreground">
+                        <div className="text-center p-8 border border-dashed rounded-xl text-muted-foreground dark:text-[#7b7b8b] dark:border-[#292a69]">
                             No hay configuraciones disponibles. Contacta al administrador.
                         </div>
                     ) : (
                         <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2">
                             {Object.entries(groupedConfigs).map(([category, configs]) => (
                                 <div key={category} className="space-y-3">
-                                    <div className="flex items-center gap-2 text-[#4f645b] font-semibold border-b pb-2">
+                                    <div className="flex items-center gap-2 text-[#4f645b] dark:text-[#5a62b8] font-semibold border-b dark:border-[#292a69] pb-2">
                                         {getCategoryIcon(category)}
                                         <span>{getCategoryLabel(category)}</span>
                                     </div>
                                     <div className="grid gap-3">
                                         {configs.map((config) => (
-                                            <ConfigRow 
-                                                key={config.id} 
-                                                config={config} 
+                                            <ConfigRow
+                                                key={config.id}
+                                                config={config}
                                                 updateMutation={updateMutation}
                                                 getIcon={getConfigIcon}
                                                 toast={toast}
@@ -138,10 +138,11 @@ export default function ConfiguracionPage() {
                         </div>
                     )}
 
-                    <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
-                        <Button 
-                            variant="outline" 
+                    <div className="flex justify-end gap-3 mt-6 pt-4 border-t dark:border-[#292a69]">
+                        <Button
+                            variant="outline"
                             onClick={() => setModalOpen(false)}
+                            className="dark:border-[#292a69] dark:text-[#dddeff] dark:hover:bg-[#292a69]"
                         >
                             Cerrar
                         </Button>
@@ -193,15 +194,15 @@ function ConfigRow({
     };
 
     return (
-        <div className="flex items-center gap-4 p-3 bg-gray-50 dark:bg-slate-800 rounded-lg">
-            <div className="p-2 bg-white dark:bg-slate-700 rounded-lg shadow-sm">
+        <div className="flex items-center gap-4 p-3 bg-gray-50 dark:bg-[#292a69] rounded-lg">
+            <div className="p-2 bg-white dark:bg-[#22214d] rounded-lg shadow-sm">
                 {getIcon(config.clave)}
             </div>
             <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-[#2d3335] dark:text-white truncate">
+                <p className="text-sm font-medium text-[#2d3335] dark:text-[#fdfdfd] truncate">
                     {config.descripcion || config.clave.replace(/_/g, ' ').toUpperCase()}
                 </p>
-                <p className="text-xs text-muted-foreground truncate" title={config.clave}>
+                <p className="text-xs text-muted-foreground dark:text-[#7b7b8b] truncate" title={config.clave}>
                     {config.clave}
                 </p>
             </div>
@@ -211,7 +212,7 @@ function ConfigRow({
                     value={valor}
                     onChange={(e) => handleChange(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    className="w-20 h-9 text-center font-mono"
+                    className="w-20 h-9 text-center font-mono dark:bg-[#22214d] dark:text-[#fdfdfd] dark:border-[#292a69]"
                 />
                 <Button
                     size="sm"
