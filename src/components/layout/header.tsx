@@ -84,7 +84,7 @@ export function Header({ title, subtitle, onMenuClick }: HeaderProps) {
     };
 
     return (
-        <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b bg-white/70 backdrop-blur-xl px-8 shadow-sm shadow-emerald-900/5 dark:bg-slate-900/70 dark:border-slate-700">
+        <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b bg-white/70 backdrop-blur-xl px-8 shadow-sm shadow-emerald-900/5 dark:bg-[#131C17]/70 dark:border-[#2A3D32]">
             <div className="flex items-center gap-4">
                 {onMenuClick && (
                     <Button variant="ghost" size="icon" onClick={onMenuClick} className="lg:hidden text-muted-foreground hover:text-foreground">

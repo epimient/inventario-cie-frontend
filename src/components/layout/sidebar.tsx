@@ -42,7 +42,7 @@ export function Sidebar({ collapsed, onToggle, onAddNew }: SidebarProps) {
             className={cn(
                 'fixed left-0 top-0 z-40 h-screen transition-all duration-300 flex flex-col',
                 collapsed ? 'w-20' : 'w-64',
-                'bg-slate-50 dark:bg-slate-900 border-r-0'
+                'bg-slate-50 dark:bg-[#131C17] border-r-0'
             )}
         >
             {/* Logo Area */}

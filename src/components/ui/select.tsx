@@ -14,7 +14,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         return (
             <div className="space-y-1.5">
                 {label && (
-                    <label htmlFor={selectId} className="text-sm font-medium text-foreground">
+                    <label htmlFor={selectId} className="text-sm font-medium text-[#E8F3EE]">
                         {label}
                     </label>
                 )}
@@ -22,9 +22,9 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
                     ref={ref}
                     id={selectId}
                     className={cn(
-                        'flex h-11 w-full appearance-none rounded-xl border border-transparent bg-white dark:bg-slate-800 px-4 py-2 text-sm text-foreground dark:text-slate-100 transition-colors',
-                        'placeholder:text-muted-foreground hover:bg-gray-100 dark:hover:bg-slate-700',
-                        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8F3EE] focus-visible:border-[#415A52]',
+                        'flex h-11 w-full appearance-none rounded-xl border border-[#2A3D32] bg-[#1A2620] px-4 py-2 text-sm text-[#E8F3EE] transition-colors',
+                        'placeholder:text-[#9CA99D] hover:bg-[#252E2A]',
+                        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4F645B] focus-visible:border-[#4F645B]',
                         'disabled:cursor-not-allowed disabled:opacity-50',
                         error && 'border-destructive focus-visible:ring-destructive/20',
                         className,
@@ -32,12 +32,12 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
                     {...props}
                 >
                     {placeholder && (
-                        <option value="" disabled>
+                        <option value="" disabled className="bg-[#1A2620] text-[#9CA99D]">
                             {placeholder}
                         </option>
                     )}
                     {options.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
+                        <option key={opt.value} value={opt.value} className="bg-[#1A2620] text-[#E8F3EE]">
                             {opt.label}
                         </option>
                     ))}
