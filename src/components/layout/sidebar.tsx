@@ -189,7 +189,7 @@ export function Sidebar({ collapsed, onToggle, onAddNew }: SidebarProps) {
 
                 <div className="flex flex-col gap-1 mt-2 pt-4 border-t border-slate-200 dark:border-[#292a69]">
                     <button
-                        onClick={() => window.open('/docs/MANUAL_USUARIO.pdf', '_blank')}
+                        onClick={() => window.open('/docs/MANUAL_USUARIO.md', '_blank')}
                         className={cn(
                             "flex items-center gap-3 py-2.5 rounded-xl text-[#5a6062] dark:text-[#dddeff] hover:text-[#4f645b] dark:hover:text-[#5a62b8] hover:bg-emerald-50/50 dark:hover:bg-[#292a69]/50 transition-colors",
                             collapsed ? "justify-center" : "px-4"
