@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useEquipos } from '@/hooks/use-equipos';
 import { useElectronica } from '@/hooks/use-electronica';
 import { useRobotica } from '@/hooks/use-robotica';
@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table } from '@/components/ui/table';
 import { Spinner } from '@/components/ui/spinner';
+import { usePagination } from '@/hooks/use-pagination';
+import type { Column } from '@/types';
 import type { Equipo, Electronica, Robot } from '@/types';
 
 interface DanadoItem {
@@ -26,8 +28,6 @@ export default function DanadosPage() {
     const { electronica, isLoading: loadingElectronica } = useElectronica();
     const [activeTab, setActiveTab] = useState('Todos');
     const [search, setSearch] = useState('');
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 20;
 
     const isLoading = loadingEquipos || loadingElectronica || loadingRobots;
 
@@ -77,16 +77,14 @@ export default function DanadosPage() {
         }));
     }
 
-    const filtered = items.filter(item =>
-        item.nombre.toLowerCase().includes(search.toLowerCase()) ||
-        (item.codigo && item.codigo.toLowerCase().includes(search.toLowerCase()))
-    );
+    const filtered = useMemo(() => {
+        return items.filter(item =>
+            item.nombre.toLowerCase().includes(search.toLowerCase()) ||
+            (item.codigo && item.codigo.toLowerCase().includes(search.toLowerCase()))
+        );
+    }, [items, search]);
 
-    const totalItems = filtered.length;
-    const totalPages = Math.ceil(totalItems / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const paginatedData = filtered.slice(startIndex, endIndex);
+    const { paginatedItems, currentPage, setCurrentPage, totalPages, totalItems, startItem, endItem } = usePagination(filtered, 20);
 
     const getBadgeVariant = (estado: string) => {
         if (estado === 'dañado') return 'destructive';
@@ -101,7 +99,7 @@ export default function DanadosPage() {
         return '📦';
     };
 
-    const columns = [
+    const columns: Column<DanadoItem>[] = [
         {
             key: 'tipo',
             header: 'Tipo',
@@ -220,15 +218,15 @@ export default function DanadosPage() {
 
             {/* Main Table Card */}
             <div className="bg-white dark:bg-[#22214d] rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-black/40 border border-gray-100/50 dark:border-[#292a69]/50 overflow-hidden">
-                <Table columns={columns} data={paginatedData} loading={isLoading} emptyMessage="No se encontraron equipos dañados" />
+                <Table columns={columns} data={paginatedItems} loading={isLoading} emptyMessage="No se encontraron equipos dañados" />
 
                 {/* Pagination */}
                 {!isLoading && filtered.length > 0 && (
                     <div className="px-8 py-5 border-t border-gray-50 dark:border-[#292a69] flex items-center justify-between text-sm text-muted-foreground dark:text-[#dddeff] font-medium">
-                        <span>Mostrando {startIndex + 1} a {Math.min(endIndex, totalItems)} de {totalItems} registros</span>
+                        <span>Mostrando {startItem} a {endItem} de {totalItems} registros</span>
                         <div className="flex items-center gap-2">
                             <button
-                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                                 disabled={currentPage === 1}
                                 className="px-4 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-[#292a69] transition-colors disabled:opacity-30"
                             >
@@ -250,7 +248,7 @@ export default function DanadosPage() {
                                 );
                             })}
                             <button
-                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                                 disabled={currentPage === totalPages}
                                 className="px-4 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-[#292a69] transition-colors disabled:opacity-30"
                             >

@@ -4,6 +4,7 @@ import { cn } from '@/utils/cn';
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: 'primary' | 'secondary' | 'destructive' | 'ghost' | 'outline';
     size?: 'sm' | 'md' | 'lg' | 'icon';
+    loading?: boolean;
 }
 
 const variants = {
@@ -26,7 +27,7 @@ const sizes = {
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-    ({ className, variant = 'primary', size = 'md', disabled, ...props }, ref) => (
+    ({ className, variant = 'primary', size = 'md', disabled, loading, ...props }, ref) => (
         <button
             ref={ref}
             className={cn(
@@ -37,7 +38,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
                 sizes[size],
                 className,
             )}
-            disabled={disabled}
+            disabled={disabled || loading}
+            aria-busy={loading}
             {...props}
         />
     ),

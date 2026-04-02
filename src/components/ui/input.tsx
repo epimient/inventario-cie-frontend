@@ -1,4 +1,4 @@
-import { forwardRef, type InputHTMLAttributes } from 'react';
+import { forwardRef, useId, type InputHTMLAttributes } from 'react';
 import { cn } from '@/utils/cn';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -8,7 +8,10 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
     ({ className, label, error, id, ...props }, ref) => {
-        const inputId = id || label?.toLowerCase().replace(/\s+/g, '-');
+        const generatedId = useId();
+        const inputId = id || generatedId;
+        const errorId = `${inputId}-error`;
+
         return (
             <div className="space-y-1.5">
                 {label && (
@@ -19,6 +22,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                 <input
                     ref={ref}
                     id={inputId}
+                    aria-invalid={!!error}
+                    aria-describedby={error ? errorId : undefined}
                     className={cn(
                         'flex h-11 w-full rounded-xl border border-gray-300 dark:border-[#2A3D32] bg-white dark:bg-[#1A2620] px-4 py-2 text-sm text-[#2d3335] dark:text-[#E8F3EE] transition-colors',
                         'file:border-0 file:bg-transparent file:text-sm file:font-medium',
@@ -30,7 +35,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                     )}
                     {...props}
                 />
-                {error && <p className="text-xs text-destructive">{error}</p>}
+                {error && <p id={errorId} className="text-xs text-destructive" role="alert">{error}</p>}
             </div>
         );
     },

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Plus, Undo2, Trash2, Search, Filter, AlertTriangle, Download, ArrowUpRight, ArrowDownLeft, RefreshCcw, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,8 +16,9 @@ import { useRobotica } from '@/hooks/use-robotica';
 import { useMateriales } from '@/hooks/use-materiales';
 import { formatDate } from '@/utils/formatters';
 import { getErrorMessage } from '@/utils/error-handler';
-import type { Prestamo } from '@/types';
+import type { Prestamo, Column } from '@/types';
 import { Spinner } from '@/components/ui/spinner';
+import { usePagination } from '@/hooks/use-pagination';
 
 const tabs = ['Todos', 'Activos', 'Vencidos', 'Devueltos'];
 
@@ -35,7 +36,6 @@ export default function PrestamosPage() {
     const [activeTab, setActiveTab] = useState('Todos');
     const [deleteModal, setDeleteModal] = useState<Prestamo | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 20;
 
     const { toast } = useToast();
     const { hasRole } = useAuth();
@@ -101,24 +101,24 @@ export default function PrestamosPage() {
         }
     };
 
-    const filtered = prestamos.filter((p) => {
-        let matchesEstado = true;
-        if (activeTab === 'Activos') matchesEstado = p.estado === 'activo';
-        if (activeTab === 'Vencidos') matchesEstado = p.estado === 'vencido';
-        if (activeTab === 'Devueltos') matchesEstado = p.estado === 'devuelto';
+    const filtered = useMemo(() => {
+        return prestamos.filter((p) => {
+            const tabEstadoMap: Record<string, string> = {
+                'Activos': 'activo',
+                'Vencidos': 'vencido',
+                'Devueltos': 'devuelto',
+            };
 
-        const prestatario = (prestatarios.find(pr => pr.id === p.prestatario_id)?.nombre || '').toLowerCase();
-        const matchesSearch = prestatario.includes(search.toLowerCase()) ||
-            (p.observaciones || '').toLowerCase().includes(search.toLowerCase());
-        return matchesEstado && matchesSearch;
-    });
+            const matchesEstado = activeTab === 'Todos' || p.estado === tabEstadoMap[activeTab];
 
-    // Paginación
-    const totalItems = filtered.length;
-    const totalPages = Math.ceil(totalItems / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const paginatedData = filtered.slice(startIndex, endIndex);
+            const prestatario = (prestatarios.find(pr => pr.id === p.prestatario_id)?.nombre || '').toLowerCase();
+            const matchesSearch = prestatario.includes(search.toLowerCase()) ||
+                (p.observaciones || '').toLowerCase().includes(search.toLowerCase());
+            return matchesEstado && matchesSearch;
+        });
+    }, [prestamos, prestatarios, activeTab, search]);
+
+    const { paginatedItems, totalPages, totalItems, startItem, endItem } = usePagination(filtered, 20);
 
     const getPrestatarioName = (id: number) => prestatarios.find(p => p.id === id)?.nombre || 'Desconocido';
 
@@ -140,14 +140,14 @@ export default function PrestamosPage() {
         }
     };
 
-    const columns: any = [
+    const columns: Column<Prestamo>[] = [
         { key: 'id', header: 'ID', className: 'w-16 font-mono text-muted-foreground' },
         {
             key: 'prestatario',
             header: 'Prestatario',
-            render: (p: Prestamo) => <span className="font-bold text-[#2d3335]">{getPrestatarioName(p.prestatario_id)}</span>
+            render: (p: Prestamo) => <span className="font-bold text-[#2d3335] dark:text-[#fdfdfd]">{getPrestatarioName(p.prestatario_id)}</span>
         },
-        { key: 'item', header: 'Ítem', className: 'font-medium', render: (p: Prestamo) => getItemName(p) },
+        { key: 'item', header: 'Ítem', className: 'font-medium dark:text-[#dddeff]', render: (p: Prestamo) => getItemName(p) },
         { key: 'fecha_prestamo', header: 'Fecha Préstamo', className: 'text-muted-foreground', render: (p: Prestamo) => formatDate(p.fecha_prestamo) },
         { key: 'fecha_limite', header: 'Fecha Límite', className: 'text-muted-foreground', render: (p: Prestamo) => p.fecha_limite ? formatDate(p.fecha_limite) : '-' },
         {
@@ -275,12 +275,12 @@ export default function PrestamosPage() {
 
             {/* Main Table Card */}
             <div className="bg-white dark:bg-[#22214d] rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-black/40 border border-gray-100/50 dark:border-[#292a69]/50 overflow-hidden">
-                <Table columns={columns} data={paginatedData} loading={isLoadingData} emptyMessage="No hay préstamos registrados" />
+                <Table columns={columns} data={paginatedItems} loading={isLoadingData} emptyMessage="No hay préstamos registrados" />
 
                 {/* Pagination */}
                 {!isLoadingData && filtered.length > 0 && (
                     <div className="px-8 py-5 border-t border-gray-50 dark:border-[#292a69] flex items-center justify-between text-sm text-muted-foreground dark:text-[#dddeff] font-medium">
-                        <span>Mostrando {startIndex + 1} a {Math.min(endIndex, totalItems)} de {totalItems} registros</span>
+                        <span>Mostrando {startItem} a {endItem} de {totalItems} registros</span>
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Plus, Pencil, Trash2, Search, AlertTriangle, Download, Filter, ArrowLeft, Package, Droplet, Box } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,8 +11,9 @@ import { useAuth } from '@/contexts/auth-context';
 import { useSearch } from '@/contexts/search-context';
 import { useMateriales } from '@/hooks/use-materiales';
 import { Spinner } from '@/components/ui/spinner';
-import type { Material, MaterialCreate } from '@/types';
+import type { Material, MaterialCreate, Column } from '@/types';
 import { getErrorMessage } from '@/utils/error-handler';
+import { usePagination } from '@/hooks/use-pagination';
 
 const tabs = ['Todos', 'Filamento', 'Resina', 'Otros'];
 
@@ -32,8 +33,6 @@ export default function MaterialesPage() {
     const [deleteModal, setDeleteModal] = useState<Material | null>(null);
     const [editing, setEditing] = useState<Material | null>(null);
     const [form, setForm] = useState<MaterialCreate>({ color: '', cantidad: '', categoria: 'Filamento', usado: 0, en_uso: 0, en_stock: 0 });
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 20;
     const { toast } = useToast();
     const { hasRole } = useAuth();
     const canEdit = hasRole(['admin', 'inventory']);
@@ -114,18 +113,16 @@ export default function MaterialesPage() {
         }
     };
 
-    const filtered = materiales.filter((m) => {
-        const matchesSearch = (m.color || '').toLowerCase().includes(search.toLowerCase()) ||
-            (m.cantidad || '').toLowerCase().includes(search.toLowerCase());
-        const matchesTab = activeTab === 'Todos' || m.categoria === activeTab;
-        return matchesSearch && matchesTab;
-    });
+    const filtered = useMemo(() => {
+        return materiales.filter((m) => {
+            const matchesSearch = (m.color || '').toLowerCase().includes(search.toLowerCase()) ||
+                (m.cantidad || '').toLowerCase().includes(search.toLowerCase());
+            const matchesTab = activeTab === 'Todos' || m.categoria === activeTab;
+            return matchesSearch && matchesTab;
+        });
+    }, [materiales, search, activeTab]);
 
-    const totalItems = filtered.length;
-    const totalPages = Math.ceil(totalItems / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const paginatedData = filtered.slice(startIndex, endIndex);
+    const { paginatedItems, currentPage, setCurrentPage, totalPages, totalItems, startItem, endItem } = usePagination(filtered, 20);
 
     const getStockBadge = (enStock: number) => {
         if (enStock === 0) return <Badge variant="destructive">Agotado</Badge>;
@@ -139,20 +136,20 @@ export default function MaterialesPage() {
             header: 'Material',
             render: (m: Material) => (
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-[#d1e8dd] flex items-center justify-center text-[#4f645b]">
+                    <div className="w-10 h-10 rounded-lg bg-[#d1e8dd] dark:bg-[#3b438e] flex items-center justify-center text-[#4f645b] dark:text-[#fdfdfd]">
                         {getIcon(m.categoria)}
                     </div>
                     <div>
-                        <p className="font-bold text-[#2d3335] leading-tight">{m.color}</p>
-                        <p className="text-xs text-[#5a6062]">{m.cantidad}</p>
+                        <p className="font-bold text-[#2d3335] dark:text-[#fdfdfd] leading-tight">{m.color}</p>
+                        <p className="text-xs text-[#5a6062] dark:text-[#dddeff]">{m.cantidad}</p>
                     </div>
                 </div>
             )
         },
-        { key: 'categoria', header: 'Categoría', render: (m: Material) => <span className="font-medium">{m.categoria}</span> },
-        { key: 'en_stock', header: 'Stock', render: (m: Material) => <span className="font-bold text-green-600">{m.en_stock}</span> },
-        { key: 'en_uso', header: 'En Uso', render: (m: Material) => <span className="font-medium text-[#486277]">{m.en_uso}</span> },
-        { key: 'total', header: 'Total', render: (m: Material) => <span className="font-bold">{m.total}</span> },
+        { key: 'categoria', header: 'Categoría', render: (m: Material) => <span className="font-medium dark:text-[#dddeff]">{m.categoria}</span> },
+        { key: 'en_stock', header: 'Stock', render: (m: Material) => <span className="font-bold text-green-600 dark:text-green-400">{m.en_stock}</span> },
+        { key: 'en_uso', header: 'En Uso', render: (m: Material) => <span className="font-medium text-[#486277] dark:text-[#dddeff]">{m.en_uso}</span> },
+        { key: 'total', header: 'Total', render: (m: Material) => <span className="font-bold dark:text-[#fdfdfd]">{m.total}</span> },
         { key: 'estado', header: 'Estado', render: (m: Material) => getStockBadge(m.en_stock) },
         ...(canEdit || canDelete ? [{
             key: 'actions',
@@ -230,13 +227,13 @@ export default function MaterialesPage() {
             </div>
 
             <div className="bg-white dark:bg-[#22214d] rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-black/40 border border-gray-100/50 dark:border-[#292a69]/50 overflow-hidden">
-                <Table columns={columns} data={paginatedData} loading={isLoading} emptyMessage="No se encontraron materiales" />
+                <Table columns={columns} data={paginatedItems} loading={isLoading} emptyMessage="No se encontraron materiales" />
 
                 {!isLoading && filtered.length > 0 && (
                     <div className="px-8 py-5 border-t border-gray-50 dark:border-[#292a69] flex items-center justify-between text-sm text-muted-foreground dark:text-[#dddeff] font-medium">
-                        <span>Mostrando {startIndex + 1} a {Math.min(endIndex, totalItems)} de {totalItems} registros</span>
+                        <span>Mostrando {startItem} a {endItem} de {totalItems} registros</span>
                         <div className="flex items-center gap-2">
-                            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-4 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-[#292a69] disabled:opacity-30">
+                            <button onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1} className="px-4 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-[#292a69] disabled:opacity-30">
                                 <ArrowLeft className="h-4 w-4" />
                             </button>
                             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => (
@@ -244,7 +241,7 @@ export default function MaterialesPage() {
                                     {i + 1}
                                 </button>
                             ))}
-                            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-4 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-[#292a69] disabled:opacity-30">
+                            <button onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages} className="px-4 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-[#292a69] disabled:opacity-30">
                                 <ArrowLeft className="h-4 w-4 rotate-180" />
                             </button>
                         </div>
@@ -257,7 +254,7 @@ export default function MaterialesPage() {
                     <Input label="Color/Tipo" value={form.color} onChange={(e) => setForm({ ...form, color: e.target.value })} required placeholder="ej: PLA Blanco" />
                     <Input label="Cantidad" value={form.cantidad} onChange={(e) => setForm({ ...form, cantidad: e.target.value })} required placeholder="ej: 1kg, 500g" />
                     <div className="space-y-2">
-                        <label className="block text-sm font-semibold text-[#2d3335] ml-1">Categoría</label>
+                        <label className="block text-sm font-semibold text-[#2d3335] dark:text-[#fdfdfd] ml-1">Categoría</label>
                         <select
                             value={form.categoria}
                             onChange={(e) => setForm({ ...form, categoria: e.target.value as any })}

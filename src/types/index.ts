@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 // ── Auth ──
 export interface User {
     id: string;
@@ -168,4 +170,54 @@ export interface MovimientoCreate {
     material_id?: number;
     cantidad: number;
     descripcion?: string;
+}
+
+// ── Form Interfaces ──
+export interface EquipoForm {
+    nombre: string;
+    marca: string;
+    codigo: string;
+    accesorios: string;
+    serial: string;
+    estado: Equipo['estado'];
+}
+
+export interface ElectronicaForm {
+    nombre: string;
+    descripcion: string;
+    tipo: string;
+    en_uso: number;
+    en_stock: number;
+}
+
+export interface RobotForm {
+    nombre: string;
+    fuera_de_servicio: number;
+    en_uso: number;
+    disponible: number;
+}
+
+export interface MaterialForm {
+    color: string;
+    tipo_id?: number;
+    cantidad: string;
+    categoria: Material['categoria'];
+    en_stock: number;
+    en_uso: number;
+}
+
+export interface PrestatarioForm {
+    nombre: string;
+    telefono: string;
+    dependencia: string;
+    cedula: string;
+    email: string;
+}
+
+// ── Table Column Type ──
+export interface Column<T> {
+    key: string;
+    header: string;
+    render?: (item: T) => ReactNode;
+    className?: string;
 }

@@ -1,12 +1,6 @@
 import { cn } from '@/utils/cn';
 import { Spinner } from './spinner';
-
-interface Column<T> {
-    key: string;
-    header: string;
-    render?: (item: T) => React.ReactNode;
-    className?: string;
-}
+import type { Column } from '@/types';
 
 interface TableProps<T> {
     columns: Column<T>[];

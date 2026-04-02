@@ -89,34 +89,34 @@ export function Layout() {
                             <div className="h-14 w-14 rounded-xl bg-[#4f645b] text-white flex items-center justify-center group-hover:scale-110 transition-transform">
                                 <Archive className="h-7 w-7" />
                             </div>
-                            <span className="font-semibold text-[#1a1f1c]">Equipo</span>
+                            <span className="font-semibold text-[#1a1f1c] dark:text-[#fdfdfd]">Equipo</span>
                         </button>
                         <button
                             onClick={() => handleAddNew('electronica')}
-                            className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-transparent hover:border-[#486277] hover:bg-blue-50 transition-all group"
+                            className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-transparent hover:border-[#486277] hover:bg-blue-50 dark:hover:bg-[#292a69] transition-all group"
                         >
                             <div className="h-14 w-14 rounded-xl bg-[#486277] text-white flex items-center justify-center group-hover:scale-110 transition-transform">
                                 <Cpu className="h-7 w-7" />
                             </div>
-                            <span className="font-semibold text-[#1a1f1c]">Electrónica</span>
+                            <span className="font-semibold text-[#1a1f1c] dark:text-[#fdfdfd]">Electrónica</span>
                         </button>
                         <button
                             onClick={() => handleAddNew('robotica')}
-                            className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-transparent hover:border-[#516170] hover:bg-gray-50 transition-all group"
+                            className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-transparent hover:border-[#516170] hover:bg-gray-50 dark:hover:bg-[#292a69] transition-all group"
                         >
                             <div className="h-14 w-14 rounded-xl bg-[#516170] text-white flex items-center justify-center group-hover:scale-110 transition-transform">
                                 <Bot className="h-7 w-7" />
                             </div>
-                            <span className="font-semibold text-[#1a1f1c]">Robótica</span>
+                            <span className="font-semibold text-[#1a1f1c] dark:text-[#fdfdfd]">Robótica</span>
                         </button>
                         <button
                             onClick={() => handleAddNew('material')}
-                            className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-transparent hover:border-[#4f645b] hover:bg-[#E8F3EE] transition-all group"
+                            className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-transparent hover:border-[#4f645b] hover:bg-[#E8F3EE] dark:hover:bg-[#292a69] transition-all group"
                         >
                             <div className="h-14 w-14 rounded-xl bg-[#4f645b] text-white flex items-center justify-center group-hover:scale-110 transition-transform">
                                 <Package className="h-7 w-7" />
                             </div>
-                            <span className="font-semibold text-[#1a1f1c]">Material</span>
+                            <span className="font-semibold text-[#1a1f1c] dark:text-[#fdfdfd]">Material</span>
                         </button>
                     </div>
                 </div>

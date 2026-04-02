@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Plus, Undo2, Trash2, Search, Filter, AlertTriangle, Monitor, Keyboard, Server, Armchair, Pencil, Download, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,8 +13,9 @@ import { useSearch } from '@/contexts/search-context';
 import { useEquipos } from '@/hooks/use-equipos';
 import { formatDate } from '@/utils/formatters';
 import { getErrorMessage } from '@/utils/error-handler';
-import type { Equipo, EquipoCreate } from '@/types';
+import type { Equipo, EquipoCreate, EquipoForm, Column } from '@/types';
 import { Spinner } from '@/components/ui/spinner';
+import { usePagination } from '@/hooks/use-pagination';
 
 const estadoOptionsAll = [
     { value: 'disponible', label: 'Disponible' },
@@ -54,11 +55,10 @@ export default function EquiposPage() {
     const [modalOpen, setModalOpen] = useState(searchParams.get('new') === 'true');
     const [deleteModal, setDeleteModal] = useState<Equipo | null>(null);
     const [editing, setEditing] = useState<Equipo | null>(null);
-    const [form, setForm] = useState<any>({
+    const [form, setForm] = useState<EquipoForm>({
         nombre: '', marca: '', codigo: '', accesorios: '', serial: '', estado: 'disponible',
     });
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 20;
     const { toast } = useToast();
     const { hasRole } = useAuth();
     const canEdit = hasRole(['admin', 'inventory']);
@@ -144,28 +144,27 @@ export default function EquiposPage() {
         }
     };
 
-    const filtered = equipos.filter((e) => {
-        const matchesSearch = (e.nombre || '').toLowerCase().includes(search.toLowerCase()) ||
-            (e.codigo || '').toLowerCase().includes(search.toLowerCase()) ||
-            (e.marca || '').toLowerCase().includes(search.toLowerCase());
-        
-        let matchesTab = true;
-        if (activeTab === 'Disponibles') matchesTab = e.estado === 'disponible';
-        else if (activeTab === 'En Uso') matchesTab = e.estado === 'en uso';
-        else if (activeTab === 'Prestados') matchesTab = e.estado === 'prestado';
-        else if (activeTab === 'Mantenimiento') matchesTab = e.estado === 'mantenimiento';
-        else if (activeTab === 'Dañados') matchesTab = e.estado === 'dañado';
-        else if (activeTab === 'Arreglados') matchesTab = e.estado === 'arreglado';
-        
-        return matchesSearch && matchesTab;
-    });
+    const filtered = useMemo(() => {
+        return equipos.filter((e) => {
+            const matchesSearch = (e.nombre || '').toLowerCase().includes(search.toLowerCase()) ||
+                (e.codigo || '').toLowerCase().includes(search.toLowerCase()) ||
+                (e.marca || '').toLowerCase().includes(search.toLowerCase());
 
-    // Paginación
-    const totalItems = filtered.length;
-    const totalPages = Math.ceil(totalItems / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const paginatedData = filtered.slice(startIndex, endIndex);
+            const tabEstadoMap: Record<string, string> = {
+                'Disponibles': 'disponible',
+                'En Uso': 'en uso',
+                'Prestados': 'prestado',
+                'Mantenimiento': 'mantenimiento',
+                'Dañados': 'dañado',
+                'Arreglados': 'arreglado',
+            };
+
+            const matchesTab = activeTab === 'Todos' || e.estado === tabEstadoMap[activeTab];
+            return matchesSearch && matchesTab;
+        });
+    }, [equipos, search, activeTab]);
+
+    const { paginatedItems, totalPages, totalItems, startItem, endItem } = usePagination(filtered, 20);
 
     const getBadgeVariant = (estado: string) => {
         switch (estado) {
@@ -179,12 +178,12 @@ export default function EquiposPage() {
         }
     };
 
-    const columns: any = [
+    const columns: Column<Equipo>[] = [
         { 
             key: 'codigo', 
             header: 'Código', 
             render: (e: Equipo) => (
-                <span className="font-mono text-xs font-bold text-muted-foreground px-2 py-1 bg-[#ebeef0] rounded-md tracking-tighter">{e.codigo}</span>
+                <span className="font-mono text-xs font-bold text-muted-foreground dark:text-[#fdfdfd] px-2 py-1 bg-[#ebeef0] dark:bg-[#3b438e] rounded-md tracking-tighter">{e.codigo}</span>
             )
         },
         {
@@ -192,17 +191,17 @@ export default function EquiposPage() {
             header: 'Equipo / Nombre',
             render: (e: Equipo) => (
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-[#dee3e6] flex items-center justify-center text-muted-foreground">
+                    <div className="w-10 h-10 rounded-lg bg-[#dee3e6] dark:bg-[#3b438e] flex items-center justify-center text-muted-foreground dark:text-[#fdfdfd]">
                         {getIcon(e.nombre)}
                     </div>
                     <div>
-                        <p className="font-bold text-[#2d3335] leading-tight">{e.nombre}</p>
-                        <p className="text-xs text-[#5a6062]">{e.serial || 'Sin serie'}</p>
+                        <p className="font-bold text-[#2d3335] dark:text-[#fdfdfd] leading-tight">{e.nombre}</p>
+                        <p className="text-xs text-[#5a6062] dark:text-[#dddeff]">{e.serial || 'Sin serie'}</p>
                     </div>
                 </div>
             )
         },
-        { key: 'marca', header: 'Marca', render: (e: Equipo) => <span className="font-medium text-[#2d3335]">{e.marca}</span> },
+        { key: 'marca', header: 'Marca', render: (e: Equipo) => <span className="font-medium text-[#2d3335] dark:text-[#fdfdfd]">{e.marca}</span> },
         {
             key: 'estado',
             header: 'Estado',
@@ -297,12 +296,12 @@ export default function EquiposPage() {
 
             {/* Main Table Card */}
             <div className="bg-white dark:bg-[#22214d] rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-black/40 border border-gray-100/50 dark:border-[#292a69]/50 overflow-hidden">
-                <Table columns={columns} data={paginatedData} loading={isLoading} emptyMessage="No se encontraron equipos" />
+                <Table columns={columns} data={paginatedItems} loading={isLoading} emptyMessage="No se encontraron equipos" />
 
                 {/* Pagination */}
                 {!isLoading && filtered.length > 0 && (
                     <div className="px-8 py-5 border-t border-gray-50 dark:border-[#292a69] flex items-center justify-between text-sm text-muted-foreground dark:text-[#dddeff] font-medium">
-                        <span>Mostrando {startIndex + 1} a {Math.min(endIndex, totalItems)} de {totalItems} equipos</span>
+                        <span>Mostrando {startItem} a {endItem} de {totalItems} equipos</span>
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
@@ -349,7 +348,7 @@ export default function EquiposPage() {
                     <Select
                         label="Estado"
                         value={form.estado}
-                        onChange={(e) => setForm({ ...form, estado: e.target.value })}
+                        onChange={(e) => setForm({ ...form, estado: e.target.value as EquipoForm['estado'] })}
                         options={estadoOptionsEditable}
                     />
                     <div className="flex justify-end gap-3 pt-4">

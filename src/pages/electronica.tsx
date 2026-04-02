@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Plus, Pencil, Trash2, Search, AlertTriangle, Download, Filter, ArrowLeft, Cpu, Zap, Cable, Forward } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,8 +11,9 @@ import { useAuth } from '@/contexts/auth-context';
 import { useSearch } from '@/contexts/search-context';
 import { useElectronica } from '@/hooks/use-electronica';
 import { Spinner } from '@/components/ui/spinner';
-import type { Electronica, ElectronicaCreate } from '@/types';
+import type { Electronica, ElectronicaCreate, Column } from '@/types';
 import { getErrorMessage } from '@/utils/error-handler';
+import { usePagination } from '@/hooks/use-pagination';
 
 const tabs = ['Todos', 'Disponibles', 'En Uso', 'Agotados'];
 
@@ -37,8 +38,6 @@ export default function ElectronicaPage() {
     const [form, setForm] = useState<ElectronicaCreate>({
         nombre: '', descripcion: '', tipo: '', en_uso: 0, en_stock: 0,
     });
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 20;
     const { toast } = useToast();
     const { hasRole } = useAuth();
     const canEdit = hasRole(['admin', 'inventory']);
@@ -119,43 +118,44 @@ export default function ElectronicaPage() {
         }
     };
 
-    const filtered = electronica.filter((e) => {
-        const matchesSearch = (e.nombre || '').toLowerCase().includes(search.toLowerCase()) ||
-            (e.tipo || '').toLowerCase().includes(search.toLowerCase());
-        
-        let matchesTab = true;
-        if (activeTab === 'Disponibles') matchesTab = e.en_stock > 0 && e.en_uso === 0;
-        else if (activeTab === 'En Uso') matchesTab = e.en_uso > 0;
-        else if (activeTab === 'Agotados') matchesTab = e.en_stock === 0;
-        
-        return matchesSearch && matchesTab;
-    });
+    const filtered = useMemo(() => {
+        return electronica.filter((e) => {
+            const matchesSearch = (e.nombre || '').toLowerCase().includes(search.toLowerCase()) ||
+                (e.tipo || '').toLowerCase().includes(search.toLowerCase());
 
-    const totalItems = filtered.length;
-    const totalPages = Math.ceil(totalItems / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const paginatedData = filtered.slice(startIndex, endIndex);
+            const tabConditions: Record<string, (e: Electronica) => boolean> = {
+                'Disponibles': (e) => e.en_stock > 0 && e.en_uso === 0,
+                'En Uso': (e) => e.en_uso > 0,
+                'Agotados': (e) => e.en_stock === 0,
+            };
 
-    const columns: any = [
+            const matchesTab = activeTab === 'Todos' || tabConditions[activeTab]?.(e);
+
+            return matchesSearch && matchesTab;
+        });
+    }, [electronica, search, activeTab]);
+
+    const { paginatedItems, currentPage, setCurrentPage, totalPages, totalItems, startItem, endItem } = usePagination(filtered, 20);
+
+    const columns: Column<Electronica>[] = [
         {
             key: 'nombre',
             header: 'Nombre',
             render: (e: Electronica) => (
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-[#cae6fe] flex items-center justify-center text-[#486277]">
+                    <div className="w-10 h-10 rounded-lg bg-[#cae6fe] dark:bg-[#3b438e] flex items-center justify-center text-[#486277] dark:text-[#fdfdfd]">
                         {getIcon(e.nombre)}
                     </div>
                     <div>
-                        <p className="font-bold text-[#2d3335] leading-tight">{e.nombre}</p>
-                        <p className="text-xs text-[#5a6062]">{e.tipo || 'Sin tipo'}</p>
+                        <p className="font-bold text-[#2d3335] dark:text-[#fdfdfd] leading-tight">{e.nombre}</p>
+                        <p className="text-xs text-[#5a6062] dark:text-[#dddeff]">{e.tipo || 'Sin tipo'}</p>
                     </div>
                 </div>
             )
         },
-        { key: 'descripcion', header: 'Descripción', render: (e: Electronica) => <span className="text-muted-foreground">{e.descripcion || '-'}</span> },
-        { key: 'en_stock', header: 'Stock', render: (e: Electronica) => <span className="font-medium text-green-600">{e.en_stock}</span> },
-        { key: 'en_uso', header: 'En Uso', render: (e: Electronica) => <span className="font-medium text-[#486277]">{e.en_uso}</span> },
+        { key: 'descripcion', header: 'Descripción', render: (e: Electronica) => <span className="text-muted-foreground dark:text-[#dddeff]">{e.descripcion || '-'}</span> },
+        { key: 'en_stock', header: 'Stock', render: (e: Electronica) => <span className="font-medium text-green-600 dark:text-green-400">{e.en_stock}</span> },
+        { key: 'en_uso', header: 'En Uso', render: (e: Electronica) => <span className="font-medium text-[#486277] dark:text-[#dddeff]">{e.en_uso}</span> },
         { key: 'total', header: 'Total', render: (e: Electronica) => <span className="font-bold">{e.total}</span> },
         ...(canEdit || canDelete ? [{
             key: 'actions',
@@ -233,13 +233,13 @@ export default function ElectronicaPage() {
             </div>
 
             <div className="bg-white dark:bg-[#22214d] rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-black/40 border border-gray-100/50 dark:border-[#292a69]/50 overflow-hidden">
-                <Table columns={columns} data={paginatedData} loading={isLoading} emptyMessage="No se encontraron items" />
+                <Table columns={columns} data={paginatedItems} loading={isLoading} emptyMessage="No se encontraron items" />
 
                 {!isLoading && filtered.length > 0 && (
                     <div className="px-8 py-5 border-t border-gray-50 dark:border-[#292a69] flex items-center justify-between text-sm text-muted-foreground dark:text-[#dddeff] font-medium">
-                        <span>Mostrando {startIndex + 1} a {Math.min(endIndex, totalItems)} de {totalItems} registros</span>
+                        <span>Mostrando {startItem} a {endItem} de {totalItems} registros</span>
                         <div className="flex items-center gap-2">
-                            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-4 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-[#292a69] disabled:opacity-30">
+                            <button onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1} className="px-4 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-[#292a69] disabled:opacity-30">
                                 <ArrowLeft className="h-4 w-4" />
                             </button>
                             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => (
@@ -247,7 +247,7 @@ export default function ElectronicaPage() {
                                     {i + 1}
                                 </button>
                             ))}
-                            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-4 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-[#292a69] disabled:opacity-30">
+                            <button onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages} className="px-4 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-[#292a69] disabled:opacity-30">
                                 <ArrowLeft className="h-4 w-4 rotate-180" />
                             </button>
                         </div>

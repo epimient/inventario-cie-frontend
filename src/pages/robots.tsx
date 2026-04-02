@@ -58,25 +58,25 @@ export default function RobotsPage() {
 
     const filtered = items.filter(e => (e.nombre || '').toLowerCase().includes(search.toLowerCase()));
 
-    const columns = [
+    const columns: any = [
         {
             key: 'nombre',
             header: 'Nombre',
-            render: (e: Robot) => <span className="font-bold text-[#1a1f1c]">{e.nombre}</span>
+            render: (e: Robot) => <span className="font-bold text-[#1a1f1c] dark:text-[#fdfdfd]">{e.nombre}</span>
         },
-        { key: 'disponible', header: 'Disponibles', render: (e: Robot) => <span className="font-semibold text-[#1a1f1c]">{e.disponible}</span> },
-        { key: 'en_uso', header: 'En Uso', render: (e: Robot) => <span className="font-semibold text-muted-foreground">{e.en_uso}</span> },
+        { key: 'disponible', header: 'Disponibles', render: (e: Robot) => <span className="font-semibold text-[#1a1f1c] dark:text-[#fdfdfd]">{e.disponible}</span> },
+        { key: 'en_uso', header: 'En Uso', render: (e: Robot) => <span className="font-semibold text-muted-foreground dark:text-[#dddeff]">{e.en_uso}</span> },
         { key: 'fuera_de_servicio', header: 'Fuera Servicio', render: (e: Robot) => <span className="font-semibold text-destructive">{e.fuera_de_servicio}</span> },
-        { key: 'total', header: 'Total', render: (e: Robot) => <span className="font-semibold text-muted-foreground">{e.disponible + e.en_uso + e.fuera_de_servicio}</span> },
-        { key: 'created_at', header: 'Creado', className: 'text-muted-foreground', render: (e: Robot) => formatDate(e.created_at) },
+        { key: 'total', header: 'Total', render: (e: Robot) => <span className="font-semibold text-muted-foreground dark:text-[#dddeff]">{e.disponible + e.en_uso + e.fuera_de_servicio}</span> },
+        { key: 'created_at', header: 'Creado', className: 'text-muted-foreground dark:text-[#7b7b8b]', render: (e: Robot) => formatDate(e.created_at) },
         ...(canEdit ? [{
             key: 'actions', header: '', className: 'w-24 text-right', render: (e: Robot) => (
                 <div className="flex justify-end gap-2 pr-4">
-                    <button className="text-muted-foreground hover:text-[#415A52] transition-colors p-2" onClick={(ev) => { ev.stopPropagation(); openEdit(e); }}>
+                    <button className="text-muted-foreground dark:text-[#7b7b8b] hover:text-[#415A52] dark:hover:text-[#5a62b8] transition-colors p-2" onClick={(ev) => { ev.stopPropagation(); openEdit(e); }}>
                         <Pencil className="h-4 w-4" />
                     </button>
                     {canDelete && (
-                        <button className="text-muted-foreground hover:text-destructive transition-colors p-2" onClick={(ev) => { ev.stopPropagation(); setDeleteModal(e); }}>
+                        <button className="text-muted-foreground dark:text-[#7b7b8b] hover:text-destructive transition-colors p-2" onClick={(ev) => { ev.stopPropagation(); setDeleteModal(e); }}>
                             <Trash2 className="h-4 w-4" />
                         </button>
                     )}
@@ -100,10 +100,10 @@ export default function RobotsPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <button className="h-12 px-5 rounded-2xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] text-[#1a1f1c] font-semibold text-sm flex items-center gap-2 hover:bg-gray-50 transition-colors">
+                    <button className="h-12 px-5 rounded-2xl bg-white dark:bg-[#292a69] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-black/30 text-[#1a1f1c] dark:text-[#fdfdfd] font-semibold text-sm flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-[#3b438e]/50 transition-colors">
                         <Filter className="h-4 w-4" /> Filter
                     </button>
-                    <button className="h-12 px-5 rounded-2xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] text-[#1a1f1c] font-semibold text-sm flex items-center gap-2 hover:bg-gray-50 transition-colors">
+                    <button className="h-12 px-5 rounded-2xl bg-white dark:bg-[#292a69] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-black/30 text-[#1a1f1c] dark:text-[#fdfdfd] font-semibold text-sm flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-[#3b438e]/50 transition-colors">
                         <Download className="h-4 w-4" /> Export
                     </button>
                     {canEdit && (
@@ -115,7 +115,7 @@ export default function RobotsPage() {
             </div>
 
             {/* Main Table Card */}
-            <div className="bg-white rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100/50 overflow-hidden">
+            <div className="bg-white dark:bg-[#22214d] rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-black/40 border border-gray-100/50 dark:border-[#292a69]/50 overflow-hidden">
                 <Table columns={columns} data={filtered} loading={isLoading} emptyMessage="No hay robots" />
             </div>
 

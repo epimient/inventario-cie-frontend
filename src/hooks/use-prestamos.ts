@@ -7,22 +7,14 @@ export const usePrestamos = () => {
 
     const prestamosQuery = useQuery({
         queryKey: ['prestamos'],
-        queryFn: async () => {
-            const data = await prestamosService.getAll();
-            console.log("Datos prestamos recibidos:", data);
-            return data;
-        },
+        queryFn: () => prestamosService.getAll(),
         retry: 2,
         refetchOnWindowFocus: false,
     });
 
     const prestamosActivosQuery = useQuery({
         queryKey: ['prestamos', 'activos'],
-        queryFn: async () => {
-            const data = await prestamosService.getActivos();
-            console.log("Datos préstamos activos recibidos:", data);
-            return data;
-        },
+        queryFn: () => prestamosService.getActivos(),
         retry: 2,
         refetchOnWindowFocus: false,
     });

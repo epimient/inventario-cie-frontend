@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Plus, Pencil, Trash2, Search, AlertTriangle, Download, Filter, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,8 +11,9 @@ import { useAuth } from '@/contexts/auth-context';
 import { useSearch } from '@/contexts/search-context';
 import { useRobotica } from '@/hooks/use-robotica';
 import { Spinner } from '@/components/ui/spinner';
-import type { Robot, RobotCreate } from '@/types';
+import type { Robot, RobotCreate, Column } from '@/types';
 import { getErrorMessage } from '@/utils/error-handler';
+import { usePagination } from '@/hooks/use-pagination';
 
 const estadoOptions = [
     { value: 'disponible', label: 'Disponible' },
@@ -37,8 +38,6 @@ export default function RoboticaPage() {
         en_uso: 0,
         fuera_de_servicio: 0,
     });
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 20;
     const { toast } = useToast();
     const { hasRole } = useAuth();
     const canEdit = hasRole(['admin', 'inventory']);
@@ -124,23 +123,23 @@ export default function RoboticaPage() {
         }
     };
 
-    const filtered = robots.filter((r) => {
-        const matchesSearch = (r.nombre || '').toLowerCase().includes(search.toLowerCase());
-        
-        let matchesTab = true;
-        if (activeTab === 'Disponibles') matchesTab = r.disponible > 0;
-        else if (activeTab === 'En Uso') matchesTab = r.en_uso > 0;
-        else if (activeTab === 'Fuera de Servicio') matchesTab = r.fuera_de_servicio > 0;
-        
-        return matchesSearch && matchesTab;
-    });
+    const filtered = useMemo(() => {
+        return robots.filter((r) => {
+            const matchesSearch = (r.nombre || '').toLowerCase().includes(search.toLowerCase());
 
-    // Paginación
-    const totalItems = filtered.length;
-    const totalPages = Math.ceil(totalItems / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const paginatedData = filtered.slice(startIndex, endIndex);
+            const tabConditions: Record<string, (r: Robot) => boolean> = {
+                'Disponibles': (r) => r.disponible > 0,
+                'En Uso': (r) => r.en_uso > 0,
+                'Fuera de Servicio': (r) => r.fuera_de_servicio > 0,
+            };
+
+            const matchesTab = activeTab === 'Todos' || tabConditions[activeTab]?.(r);
+
+            return matchesSearch && matchesTab;
+        });
+    }, [robots, search, activeTab]);
+
+    const { paginatedItems, currentPage, setCurrentPage, totalPages, totalItems, startItem, endItem } = usePagination(filtered, 20);
 
     const getBadgeVariant = (disponible: number, en_uso: number, fuera: number) => {
         if (fuera > 0) return 'destructive';
@@ -154,27 +153,27 @@ export default function RoboticaPage() {
         return 'Disponible';
     };
 
-    const columns: any = [
+    const columns: Column<Robot>[] = [
         { key: 'id', header: 'ID', className: 'w-16 font-mono text-muted-foreground' },
         {
             key: 'nombre',
             header: 'Nombre',
-            render: (r: Robot) => <span className="font-bold text-[#1a1f1c]">{r.nombre}</span>
+            render: (r: Robot) => <span className="font-bold text-[#1a1f1c] dark:text-[#fdfdfd]">{r.nombre}</span>
         },
         { 
             key: 'disponible', 
             header: 'Disponibles',
-            render: (r: Robot) => <span className="font-medium text-green-600">{r.disponible}</span>
+            render: (r: Robot) => <span className="font-medium text-green-600 dark:text-green-400">{r.disponible}</span>
         },
         { 
             key: 'en_uso', 
             header: 'En Uso',
-            render: (r: Robot) => <span className="font-medium text-[#486277]">{r.en_uso}</span>
+            render: (r: Robot) => <span className="font-medium text-[#486277] dark:text-[#dddeff]">{r.en_uso}</span>
         },
         { 
             key: 'fuera_de_servicio', 
             header: 'Fuera de Servicio',
-            render: (r: Robot) => <span className="font-medium text-red-500">{r.fuera_de_servicio}</span>
+            render: (r: Robot) => <span className="font-medium text-red-500 dark:text-red-400">{r.fuera_de_servicio}</span>
         },
         { 
             key: 'total', 
@@ -270,15 +269,15 @@ export default function RoboticaPage() {
 
             {/* Main Table Card */}
             <div className="bg-white dark:bg-[#22214d] rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-black/40 border border-gray-100/50 dark:border-[#292a69]/50 overflow-hidden">
-                <Table columns={columns} data={paginatedData} loading={isLoading} emptyMessage="No se encontraron robots" />
+                <Table columns={columns} data={paginatedItems} loading={isLoading} emptyMessage="No se encontraron robots" />
 
                 {/* Pagination */}
                 {!isLoading && filtered.length > 0 && (
                     <div className="px-8 py-5 border-t border-gray-50 dark:border-[#292a69] flex items-center justify-between text-sm text-muted-foreground dark:text-[#dddeff] font-medium">
-                        <span>Mostrando {startIndex + 1} a {Math.min(endIndex, totalItems)} de {totalItems} registros</span>
+                        <span>Mostrando {startItem} a {endItem} de {totalItems} registros</span>
                         <div className="flex items-center gap-2">
                             <button
-                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                                 disabled={currentPage === 1}
                                 className="px-4 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-[#292a69] transition-colors disabled:opacity-30"
                             >
@@ -300,7 +299,7 @@ export default function RoboticaPage() {
                                 );
                             })}
                             <button
-                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                                 disabled={currentPage === totalPages}
                                 className="px-4 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-[#292a69] transition-colors disabled:opacity-30"
                             >

@@ -7,11 +7,7 @@ export const useRobotica = () => {
 
     const robotsQuery = useQuery({
         queryKey: ['robots'],
-        queryFn: async () => {
-            const data = await robotsService.getAll();
-            console.log("Datos robots recibidos:", data);
-            return data;
-        },
+        queryFn: () => robotsService.getAll(),
         retry: 2,
         refetchOnWindowFocus: false,
     });

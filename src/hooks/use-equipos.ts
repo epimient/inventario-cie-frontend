@@ -7,11 +7,7 @@ export const useEquipos = () => {
 
     const equiposQuery = useQuery({
         queryKey: ['equipos'],
-        queryFn: async () => {
-            const data = await equiposService.getAll();
-            console.log("Datos equipos recibidos:", data);
-            return data;
-        },
+        queryFn: () => equiposService.getAll(),
         retry: 2,
         refetchOnWindowFocus: false,
     });
